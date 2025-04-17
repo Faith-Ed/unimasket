@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "591867215304",
+    "project_id": "unimasket",
+    "storage_bucket": "unimasket.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:591867215304:android:71d23677330e97da0394fd",
+        "android_client_info": {
+          "package_name": "com.example.redofyp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0eQwZn9N-5aZTa2GXN8MDfp9yrPsrtP4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
