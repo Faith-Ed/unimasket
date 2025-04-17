@@ -1,0 +1,313 @@
+// import 'package:flutter/material.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+//
+// class ViewAllScreen extends StatefulWidget {
+//   @override
+//   _ViewAllScreenState createState() => _ViewAllScreenState();
+// }
+//
+// class _ViewAllScreenState extends State<ViewAllScreen> {
+//   String? _searchQuery = '';
+//   String? _selectedCategory;
+//   String? _selectedCondition;
+//   List<String> _selectedProductCategories = [];  // Modified to hold multiple selected product categories
+//   String? _selectedServiceCategory;
+//   bool _isProductCategorySelected = false;
+//
+//   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+//
+//   // Fetch all listings from Firestore and sort by timestamp (latest to oldest)
+//   Future<List<Map<String, dynamic>>> _fetchAllListings() async {
+//     QuerySnapshot snapshot = await FirebaseFirestore.instance
+//         .collection('listings')
+//         .orderBy('timestamp', descending: true)
+//         .get();
+//
+//     // Perform local filtering
+//     List<Map<String, dynamic>> allListings = snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+//
+//     if (_searchQuery != '' && _searchQuery != null) {
+//       String searchQueryLower = _searchQuery!.toLowerCase();
+//       allListings = allListings.where((listing) {
+//         String name = listing['name']?.toString().toLowerCase() ?? '';
+//         return name.contains(searchQueryLower);
+//       }).toList();
+//     }
+//
+//     // Apply filters for Product category, Service category, etc.
+//     if (_isProductCategorySelected && _selectedProductCategories.isNotEmpty) {
+//       allListings = allListings.where((listing) {
+//         return _selectedProductCategories.contains(listing['category']);
+//       }).toList();
+//     }
+//
+//     if (!_isProductCategorySelected && _selectedServiceCategory != null) {
+//       allListings = allListings.where((listing) {
+//         return listing['category'] == _selectedServiceCategory;
+//       }).toList();
+//     }
+//
+//     if (_selectedCondition != null && _isProductCategorySelected) {
+//       allListings = allListings.where((listing) {
+//         return listing['condition'] == _selectedCondition;
+//       }).toList();
+//     }
+//
+//     return allListings;
+//   }
+//
+//
+//   // Build the listing card widget
+//   Widget _buildListingCard(Map<String, dynamic> listing) {
+//     return Card(
+//       margin: EdgeInsets.all(8.0),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.stretch,
+//         children: [
+//           listing['image'] != null && listing['image'].isNotEmpty
+//               ? Image.network(
+//             listing['image'],
+//             height: 150,
+//             width: double.infinity,
+//             fit: BoxFit.cover,
+//           )
+//               : Container(
+//             height: 150,
+//             color: Colors.grey[200],
+//             child: Center(child: Text('No Image')),
+//           ),
+//           Padding(
+//             padding: const EdgeInsets.all(8.0),
+//             child: Text(
+//               listing['name'] ?? 'No Name',
+//               style: TextStyle(fontWeight: FontWeight.bold),
+//             ),
+//           ),
+//           Padding(
+//             padding: const EdgeInsets.all(8.0),
+//             child: Text(
+//               '\$${listing['price'] ?? 'No Price'}',
+//               style: TextStyle(color: Colors.green),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   // Drawer widget for filter options
+//   Widget _buildFilterDrawer() {
+//     return Drawer(
+//       child: ListView(
+//         padding: EdgeInsets.all(16.0),
+//         children: [
+//           Text(
+//             'Filter Options',
+//             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+//           ),
+//           SizedBox(height: 20),
+//
+//           // Category Filter (Product or Service)
+//           DropdownButton<String>(
+//             value: _selectedCategory,
+//             onChanged: (value) {
+//               setState(() {
+//                 _selectedCategory = value;
+//                 if (value == 'Product') {
+//                   _isProductCategorySelected = true;
+//                   _selectedServiceCategory = null;  // Reset service category
+//                   _selectedProductCategories = []; // Reset product categories
+//                 } else if (value == 'Service') {
+//                   _isProductCategorySelected = false;
+//                   _selectedProductCategories = [];  // Reset product categories
+//                   _selectedServiceCategory = null;  // Reset service category
+//                 }
+//               });
+//             },
+//             items: ['Product', 'Service'].map((category) {
+//               return DropdownMenuItem<String>(
+//                 value: category,
+//                 child: Text(category),
+//               );
+//             }).toList(),
+//             hint: Text('Select Category'),
+//           ),
+//           SizedBox(height: 20),
+//
+//           // Product Filter (only if Product category is selected)
+//           if (_isProductCategorySelected)
+//             Column(
+//               children: [
+//                 Text("Product Categories", style: TextStyle(fontWeight: FontWeight.bold)),
+//                 ...['electronics', 'books', 'food and beverages', 'clothes', 'home appliances'].map((category) {
+//                   return CheckboxListTile(
+//                     title: Text(category),
+//                     value: _selectedProductCategories.contains(category),
+//                     onChanged: (value) {
+//                       setState(() {
+//                         if (value == true) {
+//                           _selectedProductCategories.add(category);
+//                         } else {
+//                           _selectedProductCategories.remove(category);
+//                         }
+//                       });
+//                     },
+//                   );
+//                 }),
+//                 CheckboxListTile(
+//                   title: Text('Other'),
+//                   value: _selectedProductCategories.contains('other product'),
+//                   onChanged: (value) {
+//                     setState(() {
+//                       if (value == true) {
+//                         _selectedProductCategories.add('other product');
+//                       } else {
+//                         _selectedProductCategories.remove('other product');
+//                       }
+//                     });
+//                   },
+//                 ),
+//                 SizedBox(height: 10),
+//                 Text("Condition", style: TextStyle(fontWeight: FontWeight.bold)),
+//                 ...['new', 'used'].map((condition) {
+//                   return CheckboxListTile(
+//                     value: _selectedCondition == condition,
+//                     title: Text(condition),
+//                     onChanged: (value) {
+//                       setState(() {
+//                         _selectedCondition = value! ? condition : null;
+//                       });
+//                     },
+//                   );
+//                 }),
+//               ],
+//             ),
+//           SizedBox(height: 20),
+//
+//           // Service Filter (only if Service category is selected)
+//           if (_selectedCategory == 'Service')
+//             Column(
+//               children: [
+//                 Text("Service Categories", style: TextStyle(fontWeight: FontWeight.bold)),
+//                 ...['printing', 'fetching'].map((category) {
+//                   return CheckboxListTile(
+//                     value: _selectedServiceCategory == category,
+//                     title: Text(category),
+//                     onChanged: (value) {
+//                       setState(() {
+//                         _selectedServiceCategory = value! ? category : null;
+//                       });
+//                     },
+//                   );
+//                 }),
+//                 CheckboxListTile(
+//                   value: _selectedServiceCategory == 'other service',
+//                   title: Text('Other'),
+//                   onChanged: (value) {
+//                     setState(() {
+//                       _selectedServiceCategory = value! ? 'other service' : null;
+//                     });
+//                   },
+//                 ),
+//               ],
+//             ),
+//           SizedBox(height: 20),
+//
+//           // Apply Filter Button
+//           ElevatedButton(
+//             onPressed: () {
+//               Navigator.pop(context); // Close drawer
+//               setState(() {}); // Rebuild with new filters and trigger data fetch
+//             },
+//             child: Text('Apply Filter'),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       key: _scaffoldKey,
+//       endDrawer: _buildFilterDrawer(), // Right-side drawer
+//       appBar: AppBar(
+//         actions: [
+//           Padding(
+//             padding: const EdgeInsets.symmetric(vertical: 8.0),
+//             child: Container(
+//               width: MediaQuery.of(context).size.width * 0.60,
+//               child: TextField(
+//                 onChanged: (query) {
+//                   setState(() {
+//                     _searchQuery = query;
+//                   });
+//                 },
+//                 decoration: InputDecoration(
+//                   hintText: 'Search...',
+//                   border: OutlineInputBorder(
+//                     borderRadius: BorderRadius.circular(10),
+//                   ),
+//                   suffixIcon: Icon(Icons.search),
+//                 ),
+//               ),
+//             ),
+//           ),
+//           IconButton(
+//             icon: Icon(Icons.shopping_cart),
+//             onPressed: () {
+//               // Implement Cart functionality
+//             },
+//           ),
+//           IconButton(
+//             icon: Icon(Icons.filter_list),
+//             onPressed: () {
+//               _scaffoldKey.currentState!.openEndDrawer(); // Open filter drawer
+//             },
+//           ),
+//         ],
+//       ),
+//       body: SingleChildScrollView(
+//         child: Padding(
+//           padding: const EdgeInsets.all(8.0),
+//           child: Column(
+//             children: [
+//               FutureBuilder<List<Map<String, dynamic>>>(
+//                 future: _fetchAllListings(),
+//                 builder: (context, snapshot) {
+//                   if (snapshot.connectionState == ConnectionState.waiting) {
+//                     return Center(child: CircularProgressIndicator());
+//                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+//                     return Center(child: Text('No listings available.'));
+//                   } else {
+//                     return GridView.builder(
+//                       shrinkWrap: true,
+//                       physics: NeverScrollableScrollPhysics(),
+//                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+//                         crossAxisCount: 2,
+//                         crossAxisSpacing: 8.0,
+//                         mainAxisSpacing: 8.0,
+//                         childAspectRatio: 0.75,
+//                       ),
+//                       itemCount: snapshot.data!.length,
+//                       itemBuilder: (context, index) {
+//                         return _buildListingCard(snapshot.data![index]);
+//                       },
+//                     );
+//                   }
+//                 },
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         onPressed: () {
+//           // Navigate to AI Chatbot Screen
+//         },
+//         child: Icon(Icons.android),
+//         tooltip: 'AI Chatbot - Your Virtual Assistant',
+//       ),
+//     );
+//   }
+// }
