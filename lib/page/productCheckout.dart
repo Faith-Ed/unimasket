@@ -124,6 +124,9 @@ class _ProductCheckoutScreenState extends State<ProductCheckoutScreen> {
         SnackBar(content: Text('Product order placed successfully!')),
       );
 
+      // Notifications for both buyer and seller
+      await _sendOrderNotification(orderRef.id, widget.userId, orderItems);
+
       Navigator.pop(context, true);
 
       Navigator.pushReplacement(
@@ -140,6 +143,41 @@ class _ProductCheckoutScreenState extends State<ProductCheckoutScreen> {
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  // Function to send notifications for both buyer and creator
+  Future<void> _sendOrderNotification(String orderId, String buyerId, List<Map<String, dynamic>> orderItems) async {
+    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+    for (var item in orderItems) {
+      String creatorId = item['creatorId'];
+
+      // Notification for the buyer
+      await _firestore.collection('users').doc(buyerId)
+          .collection('notifications').add({
+        'message': 'Your order for ${item['itemName']} has been placed.',
+        'timestamp': FieldValue.serverTimestamp(),
+        'type': 'order_placed',
+        'listingId': item['listingId'],
+        'category': item['listingType'],  // Listing category
+        'userId': buyerId,
+        'isSeen': false,
+        'isSelected': false,
+      });
+
+      // Notification for the creator
+      await _firestore.collection('users').doc(creatorId)
+          .collection('notifications').add({
+        'message': 'You have a new order for ${item['itemName']}.',
+        'timestamp': FieldValue.serverTimestamp(),
+        'type': 'new_order',
+        'listingId': item['listingId'],
+        'category': item['listingType'],  // Listing category
+        'userId': creatorId,
+        'isSeen': false,
+        'isSelected': false,
+      });
     }
   }
 

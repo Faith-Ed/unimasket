@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "unimasketbot-qyvu",
+  "private_key_id": "4a0de2351fc757885dd4d986bdbb2acab651b780",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDAOb2MuoW6fm7Q\nvOE9bIynwsnbzByxtKfZ5xJmAlv+gcxPGx9sknA9xAZf5YJ00rf5ljlCmoI5rWHj\nQzx77uLcQcaOwbZoxJ0PaBuK540hwVfNOedtsr4MhdNLfJSirNUw4HnAxAbfr6ny\nt36F9UpNx4X3kTaxUEukNlQNMPyl8fRSM/JBW6faaPyH2gGCwgKppaL6290W73tf\nmi+IdQDnBrUinosTmmhsCIP8mhabz1J4Xt5wrH5d/BpK/Loy5ULnfuxUmOqDgDi5\n1lxQrS2kWsnGQLmSzFaY02ecfUUcNN4i/yZ3SMkJA6fuYd8xexbHLQ8nJU3aAtYb\nMODvFKE9AgMBAAECggEASlBoS/Y2Sf2kKNXEvGLxU9AWCv/zne4KME9JiR9jYlba\n3kBNm0NX2kEk98D6eOCYGIkvtOSX8OVrYRl20jDuCpnxQfJ46zMLx0+HymEvajvd\njm1S39GI8L1yDQ5qRiPMPduiplgCkkrOyJOQ+gf1BHHdBHNi8hTpUWBhiUIFgr+F\nPRQ4m6Y7jsPQz0hhboEro41H8w+4hKf4zEpd8rJb4yY+wzLQjg4q6fWLuXQ2c4V4\nQ6V3DeAMmQhA15ah7hb8U/LrM7dLhOjGphxU6xKpfTgVfZ5Mji1EI2YqiM80RuGW\nSzANo1xlsDsRVnvP9Gr1fyMXOjdIFt8xVZzCYe09jwKBgQD74DSjQ1vvMSZxBbvs\nxeUrr2tBBft92QVGIst6wxgxh246DwXgjbu0C40UlsrvYS4mA4vxEV2cwVIYinZu\nHIA5Q0ZNpg7WpDASdYsp5I21ZdJW/9jsAmslqdCs9qoiFoBg32PBVme0Zyi+Z5t5\nOQ9wCBAT6AmJkHslmHfuFEvSKwKBgQDDX39N3KHOv6Bdaa8hwgZXKibylO1ZjfbD\nPIsG8jYKR5ec2tOE89g9BF1JuuAaiTlu2TrpGEk7wlAnOrj+bQb4Ym/EFd99SlOd\nVBJCuJggQTmYN+kwIPWn+OT0CemeCaG+n8Rjgz3GMY/NregBPcUrKd27VJ/1l9vD\nRpZpyXRuNwKBgEv4QQgpTfZkNbsLRrZQriGyBECVhFhd99hCsGrzoz11IssCMvya\n402X2lKmdMkk3515nmD0ou6f5JogUT4+/HHJF9Bd0MXuuc0nhPT6yb832eyBuLTe\nueCfSqCQuZoUfV46osTywc7I+qILb/ptOnnJBMhsSUwjtvEM/sdheckHAoGBAIz5\nRomvTw45FYTx8k3gi+SvZMUbkxxQpKMB96t+cGIAgLTM7V18+iYlFQ9Tict8AvYq\nRyjUvlshfeagp8Xmc+YcWVtbERV94VGfzUFZo2N6zQ06Isf4sGmQ3dv9nxXLC2va\nKsJHe/ab4pDeEI98u93Gatl2WanD9u4z6+rPU3UHAoGBAPbLcGI4mJdJEPSaLDFs\nIqD1sI0pS4AreREY3ncRG9kgxQnc3S+AkwHWFVA17xnfAXDUeCQ/+tNDPNhe0+vD\nxd+ZljezDWiT3zhEr95iax/ULC6yoKnfFg51tR2Lo4ftVcGEZfKoSYrsoE87UKC8\n1Xi2w+NCjpo0CkftojVuKwdA\n-----END PRIVATE KEY-----\n",
+  "client_email": "unimasketbot@unimasketbot-qyvu.iam.gserviceaccount.com",
+  "client_id": "114654345873196830732",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/unimasketbot%40unimasketbot-qyvu.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

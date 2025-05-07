@@ -1,5 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'cart.dart';
+import 'chatBot.dart';
 import 'viewListingDetails.dart'; // Import the ViewListingDetails screen
 
 class ViewAllScreen extends StatefulWidget {
@@ -21,6 +24,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
   Future<List<Map<String, dynamic>>> _fetchAllListings() async {
     QuerySnapshot snapshot = await FirebaseFirestore.instance
         .collection('listings')
+        .where('listingStatus', isEqualTo: 'active')
         .orderBy('timestamp', descending: true)
         .get();
 
@@ -104,7 +108,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                '\$${listing['price'] ?? 'No Price'}',
+                '\RM ${listing['price'] ?? 'No Price'}',
                 style: TextStyle(color: Colors.green),
                 overflow: TextOverflow.ellipsis,  // Prevent overflow of long text
                 maxLines: 1,  // Ensure the text stays on one line
@@ -277,7 +281,13 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
           IconButton(
             icon: Icon(Icons.shopping_cart),
             onPressed: () {
-              // Implement Cart functionality
+              // Navigate to the CartScreen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CartScreen(userId: FirebaseAuth.instance.currentUser!.uid),
+                ),
+              );
             },
           ),
           IconButton(
@@ -322,13 +332,20 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigate to AI Chatbot Screen
-        },
-        child: Icon(Icons.android),
-        tooltip: 'AI Chatbot - Your Virtual Assistant',
+      floatingActionButton: Tooltip(
+        message: 'Chat with Bot',  // The tooltip message for the floating button
+        child: FloatingActionButton(
+          onPressed: () {
+            // Open Chatbot
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ChatBot()),
+            );
+          },
+          child: Icon(Icons.flutter_dash),
+        ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

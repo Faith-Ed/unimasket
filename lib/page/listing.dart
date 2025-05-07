@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'listingDetails.dart'; // Import listingDetails.dart to use it
+import 'package:redofyp/page/viewListingDetails.dart';
 
 class ListingScreen extends StatefulWidget {
   @override
@@ -12,17 +12,16 @@ class _ListingScreenState extends State<ListingScreen> with TickerProviderStateM
   late TabController _tabController;
   late FirebaseAuth _auth;
   late String userId;
-  late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
     _auth = FirebaseAuth.instance;
     _tabController = TabController(length: 2, vsync: this);
-    _animationController = AnimationController(vsync: this, duration: Duration(seconds: 1));
     _getUserId();
   }
 
+  // Get the current logged-in user's ID
   void _getUserId() {
     final User? user = _auth.currentUser;
     if (user != null) {
@@ -32,58 +31,48 @@ class _ListingScreenState extends State<ListingScreen> with TickerProviderStateM
     }
   }
 
-  Future<QuerySnapshot> _fetchListings(String listingType) {
-    return FirebaseFirestore.instance
-        .collection('listings')
-        .where('userId', isEqualTo: userId)
-        .where('listingType', isEqualTo: listingType)
-        .get();
-  }
-
-  // Show modal bottom sheet for selecting status
-  void _showStatusOptions(String listingId, String currentStatus) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Container(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: Text('Active'),
-                onTap: () {
-                  _updateListingStatus(listingId, 'active');
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                title: Text('Inactive'),
-                onTap: () {
-                  _updateListingStatus(listingId, 'inactive');
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // Update the listing status in Firestore
-  Future<void> _updateListingStatus(String listingId, String newStatus) async {
+  // Fetch listings from Firestore
+  Future<QuerySnapshot> _fetchListings(String listingType) async {
+    print("Fetching listings for user ID: $userId");
     try {
+      var snapshot = await FirebaseFirestore.instance
+          .collection('listings')
+          .where('userId', isEqualTo: userId) // Get listings for current user
+          .where('listingType', isEqualTo: listingType)
+          .get();
+
+      print("Number of listings fetched: ${snapshot.docs.length}");
+      return snapshot;
+    } catch (e) {
+      print("Error fetching listings: $e");
+      rethrow;
+    }
+  }
+
+  // Function to update listing status on Firestore
+  Future<void> _updateListingStatus(String listingId, bool value) async {
+    try {
+      String newStatus = value ? 'active' : 'inactive';
       await FirebaseFirestore.instance.collection('listings').doc(listingId).update({
         'listingStatus': newStatus,
       });
-      setState(() {}); // Trigger a UI update
+      print('Listing status updated to: $newStatus');
     } catch (e) {
       print("Error updating listing status: $e");
     }
   }
 
-  Widget _buildItemContainer(Map<String, dynamic> itemData) {
+  Widget _buildItemContainer(DocumentSnapshot itemData) {
+    // Initial status from Firestore document
+    String status = itemData['listingStatus'] ?? 'active';
+    ValueNotifier<bool> isActive = ValueNotifier(status == 'active');  // Initialize the switch value based on the status
+
+    // Get values for category, name, quantity, and image
+    String category = itemData['category'] ?? 'No category';
+    String name = itemData['name'] ?? 'No name';
+    int quantity = itemData['quantity'] ?? 0;  // Default to 0 if no quantity is found
+    String imageUrl = itemData['image'] ?? '';  // Get the image URL
+
     return Container(
       margin: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       padding: EdgeInsets.all(12),
@@ -102,63 +91,58 @@ class _ListingScreenState extends State<ListingScreen> with TickerProviderStateM
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Left: Image
-          itemData['image'] != null
-              ? Image.network(itemData['image'], height: 60, width: 60, fit: BoxFit.cover)
+          imageUrl.isNotEmpty
+              ? Image.network(imageUrl, height: 60, width: 60, fit: BoxFit.cover)
               : Image.asset('assets/placeholder_image.png', height: 60, width: 60),
           SizedBox(width: 12),
-          // Right: Description & View More
+
+          // Right: Description, Category, Name, Quantity, Status, Active/Inactive label, and View More
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top row: Category (left) + Status (right)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      itemData['category'] ?? 'No category',  // Provide a fallback in case category is null
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                    InkWell(
-                      onTap: () {
-                        // Show the bottom sheet when the status is tapped
-                        _showStatusOptions(itemData['id'], itemData['listingStatus'] ?? 'inactive');
-                      },
-                      child: Text(
-                        // If listingStatus is null, use 'No status'
-                        itemData['listingStatus'] ?? 'No status',
-                        style: TextStyle(
-                          color: (itemData['listingStatus'] ?? '') == 'active' ? Colors.green : Colors.red,
-                          fontSize: 12,
-                        ),
+                // Category, Name, and Quantity in one container, placed next to the image
+                Container(
+                  margin: EdgeInsets.only(bottom: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Category
+                      Text(
+                        category,
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 4),
-                Text(
-                  itemData['name'] ?? 'No name',  // Provide a fallback in case name is null
-                  style: TextStyle(fontSize: 14),
-                ),
-                if (itemData['listingType'] == 'product' && itemData['quantity'] != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      "Quantity: ${itemData['quantity']}",
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
+                      SizedBox(height: 4),
+
+                      // Product Name
+                      Text(
+                        name,
+                        style: TextStyle(fontSize: 14),
+                      ),
+
+                      // Quantity if greater than 0
+                      if (quantity > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            "Quantity: $quantity",
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ),
+                    ],
                   ),
-                SizedBox(height: 8),
-                // Spacer pushes View more to the bottom
+                ),
+
+                // View More Button
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: InkWell(
                     onTap: () {
-                      // Navigate to ListingDetailsScreen when "View more" is clicked
+                      String listingId = itemData.id;  // Use the document ID directly
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ListingDetailsScreen(listingId: itemData['id']), // Pass the listingId
+                          builder: (context) => ViewListingDetailsScreen(listingId: listingId),
                         ),
                       );
                     },
@@ -169,6 +153,68 @@ class _ListingScreenState extends State<ListingScreen> with TickerProviderStateM
                         Icon(Icons.arrow_drop_down, color: Colors.blue, size: 16),
                       ],
                     ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Active/Inactive Label and Toggle Switch at the top right of the container
+          Positioned(
+            right: 12,
+            top: 12,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Row for "Status" and Active/Inactive side by side
+                Row(
+                  children: [
+                    // "Status: " label (always black)
+                    Text(
+                      'Status: ',
+                      style: TextStyle(
+                        color: Colors.black, // "Status" label color is always black
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    // Active/Inactive text (changes color based on the status)
+                    ValueListenableBuilder<bool>(
+                      valueListenable: isActive,
+                      builder: (context, isActiveValue, child) {
+                        return Text(
+                          isActiveValue ? 'Active' : 'Inactive',
+                          style: TextStyle(
+                            color: isActiveValue ? Colors.green : Colors.red, // Change color dynamically
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+
+                // Status Toggle Switch below the label
+                Transform.scale(
+                  scale: 0.6, // Adjust the scale to make the switch smaller
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: isActive,
+                    builder: (context, isActiveValue, child) {
+                      return Switch(
+                        value: isActiveValue,
+                        activeColor: Colors.green,
+                        inactiveThumbColor: Colors.grey,
+                        inactiveTrackColor: Colors.grey[300],
+                        onChanged: (value) {
+                          // Update the status without rebuilding the widget
+                          _updateListingStatus(itemData.id, value);
+                          // Update the local value in the notifier
+                          isActive.value = value;
+                        },
+                      );
+                    },
                   ),
                 ),
               ],
@@ -208,7 +254,7 @@ class _ListingScreenState extends State<ListingScreen> with TickerProviderStateM
               return ListView.builder(
                 itemCount: serviceData.length,
                 itemBuilder: (context, index) {
-                  var item = serviceData[index].data() as Map<String, dynamic>;
+                  DocumentSnapshot item = serviceData[index];
                   return _buildItemContainer(item);
                 },
               );
@@ -227,7 +273,7 @@ class _ListingScreenState extends State<ListingScreen> with TickerProviderStateM
               return ListView.builder(
                 itemCount: productData.length,
                 itemBuilder: (context, index) {
-                  var item = productData[index].data() as Map<String, dynamic>;
+                  DocumentSnapshot item = productData[index];
                   return _buildItemContainer(item);
                 },
               );

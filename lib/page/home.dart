@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:redofyp/page/messaging.dart';
 import 'package:redofyp/page/viewAll.dart';
+import 'package:redofyp/page/viewListingDetails.dart';
+import 'package:redofyp/page/viewProduct.dart';
+import 'package:redofyp/page/viewService.dart';
 import '../auth/login_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'bottomNavigationBar.dart';
+import 'cart.dart';
+import 'chatBot.dart';
 import 'create_listing.dart'; // Import CreateListingScreen
 import 'me_menu.dart'; // Import me_menu.dart
 
@@ -17,15 +24,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int _currentIndex = 0; // Keep track of the selected tab
 
-  // Logout functionality
-  Future<void> _logout() async {
-    await _auth.signOut();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-    );
-  }
-
   // Fetch listings based on category
   Future<List<Map<String, dynamic>>> _fetchListings(String category, {bool isNew = false}) async {
     Query query;
@@ -34,12 +32,14 @@ class _HomeScreenState extends State<HomeScreen> {
       // Fetch the top 3 recent listings (both product and service)
       query = FirebaseFirestore.instance
           .collection('listings')
+          .where('listingStatus', isEqualTo: 'active')
           .orderBy('timestamp', descending: true)
           .limit(2);
     } else if (category == 'product') {
       // Fetch the latest 3 products
       query = FirebaseFirestore.instance
           .collection('listings')
+          .where('listingStatus', isEqualTo: 'active')
           .where('listingType', isEqualTo: 'product')
           .orderBy('timestamp', descending: true)
           .limit(2);
@@ -47,13 +47,19 @@ class _HomeScreenState extends State<HomeScreen> {
       // Fetch the latest 3 services
       query = FirebaseFirestore.instance
           .collection('listings')
+          .where('listingStatus', isEqualTo: 'active')
           .where('listingType', isEqualTo: 'service')
           .orderBy('timestamp', descending: true)
           .limit(2);
     }
 
     var snapshot = await query.get();
-    return snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+    return snapshot.docs.map((doc) {
+      return {
+        'id': doc.id,  // Correctly getting the Firestore document ID
+        ...doc.data() as Map<String, dynamic>
+      };
+    }).toList();
   }
 
   // Format product price to RM with 2 decimal places
@@ -62,87 +68,96 @@ class _HomeScreenState extends State<HomeScreen> {
     return 'RM ${formatter.format(price)}';  // Prefix with RM and return formatted value
   }
 
-// Build the listing card widget
+  // Build the listing card widget and navigate to the ViewListingDetailsScreen
   Widget _buildListingCard(Map<String, dynamic> listing) {
-    return Card(
-      margin: EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          // Use Image.network for displaying images from a URL
-          listing['image'] != null && listing['image'].isNotEmpty
-              ? Image.network(
-            listing['image'], // Use the image URL here
-            height: 150,
-            width: double.infinity,
-            fit: BoxFit.cover,
-          )
-              : Container(
-            height: 150,
-            color: Colors.grey[200],
-            child: Center(child: Text('No Image')),
+    return GestureDetector(
+      onTap: () {
+        // Get the listingId (document ID of the listing)
+        String listingId = listing['id'] ?? 'default_id';  // Fallback value if 'id' is null
+        print('Listing ID: $listingId');  // Log the listingId
+
+        // Navigate to ViewListingDetails screen when a card is tapped
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ViewListingDetailsScreen(listingId: listingId),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              listing['name'] ?? 'No Name',
-              style: TextStyle(fontWeight: FontWeight.bold),
+        );
+      },
+      child: Card(
+        margin: EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            // Use Image.network for displaying images from a URL
+            listing['image'] != null && listing['image'].isNotEmpty
+                ? Image.network(
+              listing['image'], // Use the image URL here
+              height: 150,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            )
+                : Container(
+              height: 150,
+              color: Colors.grey[200],
+              child: Center(child: Text('No Image')),
             ),
-          ),
-          Text(
-            '\$${listing['price'] ?? 'No Price'}',
-            style: TextStyle(color: Colors.green),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                listing['name'] ?? 'No Name',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Text(
+              '\RM ${listing['price'] ?? 'No Price'}',
+              style: TextStyle(color: Colors.green),
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-
-  // Handle Tab Selection
-  void _onTabTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-      if (index == 0) {
-        // Navigate to HomeScreen if not already on it
-        if (_currentIndex != 0) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => HomeScreen()),
-                (Route<dynamic> route) => false, // Remove previous screens from the stack
-          );
-        }
-      } else if (index == 1) {
-        // Navigate to Chats screen
-      } else if (index == 2) {
-        // Navigate to Notifications screen
-      } else if (index == 3) {
-        // Navigate to MeMenuScreen
-        if (_currentIndex != 3) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => MeMenuScreen()),
-                (Route<dynamic> route) => false, // Remove previous screens from the stack
-          );
-        }
-      }
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Logo'),
+        title: Text('UniMASKET'),
         actions: [
           IconButton(
             icon: Icon(Icons.search),
             onPressed: () {},
           ),
           IconButton(
-            icon: Icon(Icons.account_circle),
+            icon: Icon(Icons.shopping_cart),
             onPressed: () {
-              // Navigate to profile or login page
+              // Navigate to the CartScreen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CartScreen(userId: FirebaseAuth.instance.currentUser!.uid),
+                ),
+              );
             },
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 15),
+            child: Tooltip(
+              message: 'Sell',  // The label to show when user taps/hover
+              child: IconButton(
+                icon: Icon(
+                  Icons.sell, // Use sell icon for the button
+                  size: 22,
+                ),
+                onPressed: () {
+                  // Navigate to CreateListingScreen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CreateListingScreen()),
+                  );
+                },
+              ),
+            ),
           ),
         ],
       ),
@@ -207,7 +222,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Text('Products', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context)=> ViewProductScreen()),
+                        );
+                      },
                       child: Text('See All'),
                     ),
                   ],
@@ -247,7 +268,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Text('Services', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context)=> ViewServiceScreen()),
+                        );
+                      },
                       child: Text('See All'),
                     ),
                   ],
@@ -282,57 +309,28 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: BottomNavigationBarWidget(
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
-            if (index == 3) { // When the "Me" icon is tapped, navigate to MeMenuScreen
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MeMenuScreen()),
-              );
-            }
           });
         },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-            backgroundColor: Colors.blue, // Set background color to blue
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'Chats',
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: 'Notifications',
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Me',
-            backgroundColor: Colors.blue, // Set background color to blue
-          ),
-        ],
-        selectedItemColor: Colors.yellow, // Set selected item text and icon color to white
-        unselectedItemColor: Colors.white, // Set unselected item text and icon color to white
-        showUnselectedLabels: true, // Ensure unselected labels are visible
-        type: BottomNavigationBarType.fixed, // Prevent icon shifting by keeping them fixed
-        backgroundColor: Colors.blue,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => CreateListingScreen()), // Navigate to CreateListingScreen
-          );
-        },
-        child: Icon(Icons.add),
-        tooltip: 'Sell',
+      floatingActionButton: Tooltip(
+        message: 'Chat with Bot',  // The tooltip message for the floating button
+        child: FloatingActionButton(
+          onPressed: () {
+            // Open Chatbot
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ChatBot()),
+            );
+          },
+          child: Icon(Icons.flutter_dash),
+        ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
