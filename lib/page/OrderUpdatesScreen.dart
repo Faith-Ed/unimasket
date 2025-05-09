@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:redofyp/page/pageDesign.dart';
 import 'package:redofyp/page/toApprove.dart';
 import 'order.dart';
 
@@ -23,9 +24,8 @@ class _OrderUpdatesScreenState extends State<OrderUpdatesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Order Updates'),
-      ),
+      backgroundColor: Colors.yellow.shade50,
+      appBar: customAppBar('Order Updates'),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: StreamBuilder<QuerySnapshot>(

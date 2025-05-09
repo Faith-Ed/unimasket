@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -34,10 +35,11 @@ class _PendingOrderScreenState extends State<PendingOrderScreen> with SingleTick
     setState(() {
       _ordersFuture = FirebaseFirestore.instance
           .collection('orders')
-          .where('userId', isEqualTo: widget.userId)
-          .where('status', isEqualTo: status) // Fetch based on selected status
-          .get();
+          .where('status', isEqualTo: status)  // Filter by the selected status (e.g., Pending for Approval)
+          .get(); // Directly assign the result of the Firestore query
     });
+
+    print("Fetching orders for userId: ${widget.userId}");
   }
 
   String formatTimestamp(Timestamp? timestamp) {
@@ -98,8 +100,18 @@ class _PendingOrderScreenState extends State<PendingOrderScreen> with SingleTick
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Orders"),
+      backgroundColor: Colors.yellow.shade50,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(120), // Set the height of the AppBar
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(10),  // Set left bottom corner radius
+            bottomRight: Radius.circular(10),  // Set right bottom corner radius
+          ),
+          child: AppBar(
+            toolbarHeight: 80, // Toolbar height remains as per your request
+            title: Text('Orders', style: TextStyle(color: Colors.white)),
+            backgroundColor: CupertinoColors.systemYellow,  // AppBar background color
         bottom: TabBar(
           controller: _tabController,
           onTap: (index) {
@@ -122,7 +134,7 @@ class _PendingOrderScreenState extends State<PendingOrderScreen> with SingleTick
             Tab(text: "Completed"),
           ],
         ),
-      ),
+      ),),),
       body: FutureBuilder<QuerySnapshot>(
         future: _ordersFuture,
         builder: (context, snapshot) {
@@ -247,6 +259,8 @@ class _PendingOrderScreenState extends State<PendingOrderScreen> with SingleTick
                         final dynamic service = orderData['services'] ?? null;
                         final totalAmount = orderData['totalAmount'] ?? 0.0;
 
+                        print('Service Data: $service');
+
                         // Group the products by creatorId
                         var groupedByCreatorId = <String, List<dynamic>>{};
                         for (var product in products) {
@@ -334,7 +348,7 @@ class _PendingOrderScreenState extends State<PendingOrderScreen> with SingleTick
                                   }).toList(),
 
                                   // Display Service Details if there is a service
-                                  if (service != null)
+                                  if (service != null && service.isNotEmpty && service['serviceName'] != null)
                                     Row(
                                       children: [
                                         // Service Image

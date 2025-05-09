@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:redofyp/page/serviceCheckout.dart';
@@ -211,8 +212,18 @@ class _CartScreenState extends State<CartScreen> {
     bool isAnyItemSelected = cartItems.any((item) => item['isSelected'] == true);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Shopping Cart'),
+      backgroundColor: Colors.yellow.shade50,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(70), // Set the height of the AppBar
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(10),  // Set left bottom corner radius
+            bottomRight: Radius.circular(10),  // Set right bottom corner radius
+          ),
+          child: AppBar(
+            toolbarHeight: 80, // Toolbar height remains as per your request
+            title: Text('Shopping Cart', style: TextStyle(color: Colors.white)),
+            backgroundColor: CupertinoColors.systemYellow,
         actions: [
           // Only show the delete icon if any item is selected
           if (isAnyItemSelected)
@@ -221,7 +232,7 @@ class _CartScreenState extends State<CartScreen> {
               onPressed: _showDeleteConfirmationDialog,  // Show the confirmation dialog
             ),
         ],
-      ),
+      ),),),
       body: SingleChildScrollView(  // Make the body scrollable to avoid overflow
         child: Column(
           children: [
@@ -443,6 +454,7 @@ class _CartScreenState extends State<CartScreen> {
         ),
       ),
       bottomNavigationBar: BottomAppBar(
+        color: Colors.lightBlue.shade50,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10),
           child: Row(

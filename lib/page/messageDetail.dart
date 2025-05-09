@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -319,13 +320,22 @@ class _MessageDetailsPageState extends State<MessageDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: FutureBuilder<String>(
-          future: _getOtherUserFullName(widget.conversationId),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Text('Loading...');
-            }
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(70), // Set the height of the AppBar
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(10),  // Set left bottom corner radius
+            bottomRight: Radius.circular(10),  // Set right bottom corner radius
+          ),
+          child: AppBar(
+            toolbarHeight: 80, // Toolbar height remains as per your request
+            backgroundColor: CupertinoColors.systemYellow,  // AppBar background color
+            title: FutureBuilder<String>(
+              future: _getOtherUserFullName(widget.conversationId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Text('Loading...');
+                }
 
             String senderName = snapshot.data ?? 'Unknown Sender';
 
@@ -352,7 +362,7 @@ class _MessageDetailsPageState extends State<MessageDetailsPage> {
             );
           },
         ),
-      ),
+      ),),),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

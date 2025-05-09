@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../widgets/floatingButton.dart';
 import 'viewListingDetails.dart'; // Import the ViewListingDetails screen
 import 'cart.dart';
 import 'chatBot.dart';
@@ -11,22 +13,68 @@ class ViewProductScreen extends StatefulWidget {
 
 class _ViewProductScreenState extends State<ViewProductScreen> {
   String? _searchQuery = '';
+  String? _selectedCategory;
+  String? _selectedCondition;
+  List<String> _selectedProductCategories = [];
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _productListings = []; // Local data to hold the listings
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // Fetch only product listings with 'listingStatus' as 'active'
-  Future<List<Map<String, dynamic>>> _fetchProductListings() async {
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
+  Future<void> _fetchProductListings() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    Query query = FirebaseFirestore.instance
         .collection('listings')
         .where('listingStatus', isEqualTo: 'active') // Only active listings
         .where('listingType', isEqualTo: 'product') // Only product listings
-        .orderBy('timestamp', descending: true) // Sort by timestamp
-        .get();
+        .orderBy('timestamp', descending: true); // Sort by timestamp
 
-    return snapshot.docs.map((doc) {
-      return {
-        'id': doc.id,  // Firestore document ID
-        ...doc.data() as Map<String, dynamic>
-      };
-    }).toList();
+    // Apply search query filter if there is any
+    if (_searchQuery != '' && _searchQuery != null) {
+      String searchQueryLower = _searchQuery!.toLowerCase();
+      query = query
+          .where('name', isGreaterThanOrEqualTo: searchQueryLower)
+          .where('name', isLessThanOrEqualTo: searchQueryLower + '\uf8ff');
+
+      print("Applying search query: $_searchQuery");
+    }
+
+    // Apply category filter only if a category is selected
+    if (_selectedCategory != null && _selectedCategory!.isNotEmpty) {
+      query = query.where('category', isEqualTo: _selectedCategory);
+    }
+
+    // Apply condition filter only if a condition is selected
+    if (_selectedCondition != null && _selectedCondition!.isNotEmpty) {
+      query = query.where('condition', isEqualTo: _selectedCondition);
+    }
+
+    try {
+      QuerySnapshot snapshot = await query.get();
+
+      print('Query snapshot fetched: ${snapshot.docs.length} documents');
+
+      List<Map<String, dynamic>> fetchedListings = snapshot.docs.map((doc) {
+        return {
+          'id': doc.id,  // Firestore document ID
+          ...doc.data() as Map<String, dynamic>
+        };
+      }).toList();
+
+      setState(() {
+        _productListings = fetchedListings;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print("Error fetching listings: $e");
+    }
   }
 
   // Build the listing card widget
@@ -85,12 +133,100 @@ class _ViewProductScreenState extends State<ViewProductScreen> {
     );
   }
 
+  // Drawer widget for filter options
+  Widget _buildFilterDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.all(16.0),
+        children: [
+          Text(
+            'Filter Options',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 20),
+
+          // Category Filter
+          Text("Categories", style: TextStyle(fontWeight: FontWeight.bold)),
+          ...['electronics', 'books', 'food and beverages', 'clothes', 'home appliances'].map((category) {
+            return CheckboxListTile(
+              value: _selectedProductCategories.contains(category),
+              title: Text(category),
+              onChanged: (value) {
+                setState(() {
+                  if (value == true) {
+                    _selectedProductCategories.add(category);
+                  } else {
+                    _selectedProductCategories.remove(category);
+                  }
+                });
+              },
+            );
+          }),
+          SizedBox(height: 20),
+
+          // Condition Filter
+          Text("Condition", style: TextStyle(fontWeight: FontWeight.bold)),
+          ...['new', 'used'].map((condition) {
+            return CheckboxListTile(
+              value: _selectedCondition == condition,
+              title: Text(condition),
+              onChanged: (value) {
+                setState(() {
+                  _selectedCondition = value! ? condition : null;
+                });
+              },
+            );
+          }),
+          SizedBox(height: 20),
+
+          // Apply Filter Button
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close drawer
+              _fetchProductListings(); // Trigger data fetch with updated filters
+            },
+            child: Text('Apply Filter'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProductListings(); // Fetch the listings on init
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+      endDrawer: _buildFilterDrawer(),
       appBar: AppBar(
         title: Text('Products'),
         actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.60,
+              child: TextField(
+                onChanged: (query) {
+                  setState(() {
+                    _searchQuery = query;
+                  });
+                  _fetchProductListings(); // Re-fetch the listings on search query change
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  suffixIcon: Icon(Icons.search),
+                ),
+              ),
+            ),
+          ),
           IconButton(
             icon: Icon(Icons.shopping_cart),
             onPressed: () {
@@ -103,6 +239,12 @@ class _ViewProductScreenState extends State<ViewProductScreen> {
               );
             },
           ),
+          IconButton(
+            icon: Icon(Icons.filter_list),
+            onPressed: () {
+              _scaffoldKey.currentState!.openEndDrawer(); // Open filter drawer
+            },
+          ),
         ],
       ),
       body: SingleChildScrollView(  // Wrap the entire body in SingleChildScrollView for vertical scrolling
@@ -110,48 +252,29 @@ class _ViewProductScreenState extends State<ViewProductScreen> {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
-              FutureBuilder<List<Map<String, dynamic>>>(  // Fetch only active product listings
-                future: _fetchProductListings(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text('No products available.'));
-                  } else {
-                    return GridView.builder(
-                      shrinkWrap: true,  // Limit the size of the GridView
-                      physics: NeverScrollableScrollPhysics(),  // Disable scrolling for GridView inside SingleChildScrollView
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // 2 cards per row
-                        crossAxisSpacing: 8.0, // Spacing between cards
-                        mainAxisSpacing: 8.0, // Spacing between rows
-                        childAspectRatio: 0.75, // Adjust height/width ratio to avoid overflow
-                      ),
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        return _buildListingCard(snapshot.data![index]);
-                      },
-                    );
-                  }
+              _isLoading
+                  ? Center(child: CircularProgressIndicator()) // Show loading if fetching
+                  : _productListings.isEmpty
+                  ? Center(child: Text('No products available.'))
+                  : GridView.builder(
+                shrinkWrap: true,  // Limit the size of the GridView
+                physics: NeverScrollableScrollPhysics(),  // Disable scrolling for GridView inside SingleChildScrollView
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, // 2 cards per row
+                  crossAxisSpacing: 8.0, // Spacing between cards
+                  mainAxisSpacing: 8.0, // Spacing between rows
+                  childAspectRatio: 0.75, // Adjust height/width ratio to avoid overflow
+                ),
+                itemCount: _productListings.length,
+                itemBuilder: (context, index) {
+                  return _buildListingCard(_productListings[index]);
                 },
               ),
             ],
           ),
         ),
       ),
-      floatingActionButton: Tooltip(
-        message: 'Chat with Bot',  // The tooltip message for the floating button
-        child: FloatingActionButton(
-          onPressed: () {
-            // Open Chatbot
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ChatBot()),
-            );
-          },
-          child: Icon(Icons.flutter_dash),
-        ),
-      ),
+      floatingActionButton: CustomFloatingActionButton(), // Call the custom floating action button here
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }

@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../widgets/floatingButton.dart';
 import 'OrderUpdatesScreen.dart';
 import 'bottomNavigationBar.dart';
 import 'cart.dart';
@@ -76,8 +78,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Notifications'),
+      backgroundColor: Colors.yellow.shade50,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(70), // Set the height of the AppBar
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(10),  // Set left bottom corner radius
+            bottomRight: Radius.circular(10),  // Set right bottom corner radius
+          ),
+          child: AppBar(
+            toolbarHeight: 80, // Toolbar height remains as per your request
+            title: Text('Notifications', style: TextStyle(color: Colors.white)),
+            backgroundColor: CupertinoColors.systemYellow,  // AppBar background color
         actions: [
           IconButton(
             icon: Icon(Icons.shopping_cart),
@@ -111,7 +123,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             ),
           ),
         ],
-      ),
+      ),),),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -304,16 +316,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Open Chatbot
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ChatBot()),
-          );
-        },
-        child: Icon(Icons.flutter_dash),
-      ),
+      floatingActionButton: CustomFloatingActionButton(), // Call the custom floating action button here
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: BottomNavigationBarWidget(
         currentIndex: _currentIndex,
         onTap: (index) {

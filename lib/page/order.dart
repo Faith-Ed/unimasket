@@ -53,6 +53,8 @@ class _OrderPageState extends State<OrderScreen> {
           final Timestamp? orderTimestamp = data['orderTime'];
           final String orderDate = formatTimestamp(orderTimestamp);
           final String orderId = snapshot.data!.id;
+          final String collectionOption = data['collectionOption'] ?? 'N/A';
+          final String paymentMethod = data['paymentMethod'] ?? 'N/A';
 
           // Calculate the total price of the order
           double totalPrice = 0.0;
@@ -169,9 +171,39 @@ class _OrderPageState extends State<OrderScreen> {
                   ],
 
                   const SizedBox(height: 10),
+
+                  // Display Collection Option and Payment Method for Product
+                  if (products.isNotEmpty) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Collection Option: ",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          collectionOption,
+                          style: const TextStyle(fontWeight: FontWeight.normal),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Payment Method: ",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          paymentMethod,
+                          style: const TextStyle(fontWeight: FontWeight.normal),
+                        ),
+                      ],
+                    ),
+                  ],
                   const Divider(),
                   const SizedBox(height: 10),
-
                   // Total
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

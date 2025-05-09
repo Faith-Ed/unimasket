@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:redofyp/page/pageDesign.dart';
 import 'dart:io';
 import 'home.dart';
 import 'dart:convert';
@@ -155,7 +156,8 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Create Listing')),
+      backgroundColor: Colors.yellow.shade50,
+      appBar: customAppBar('Create Listing'),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -284,20 +286,40 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                 onTap: _uploadListingImage,
                 child: Container(
                   height: 100,
-                  color: Colors.grey[200],
+                  color: Colors.grey[700],
                   child: Center(
                     child: _isUploadingImage
                         ? CircularProgressIndicator()
                         : (_listingImageUrl == null
-                        ? Text('Select Image')
+                        ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.upload_file,  // Upload icon
+                          color: Colors.white,  // Set icon color to white
+                          size: 30,  // Set the size of the icon
+                        ),
+                        SizedBox(height: 8),  // Add some space between the icon and text
+                        Text(
+                          'Select Image',
+                          style: TextStyle(color: Colors.white),  // Text color white
+                        ),
+                      ],
+                    )
                         : Image.network(_listingImageUrl!)),
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 40),
               ElevatedButton(
                 onPressed: _submitListing,
                 child: Text('Submit Listing'),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.pink,
+                  minimumSize: Size(double.infinity, 50),
+                ),
               ),
             ],
           ),

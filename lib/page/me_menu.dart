@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:redofyp/page/pendingOrder.dart';
 import 'package:redofyp/page/profile_page.dart';
 import '../auth/login_user.dart';
+import 'bottomNavigationBar.dart';
 import 'home.dart';
 import 'mySales.dart'; // Make sure you have the HomeScreen route
 
@@ -94,192 +95,163 @@ class _MeMenuScreenState extends State<MeMenuScreen> {
     _getUserData(); // Fetch user data when MeMenuScreen is first loaded
   }
 
+  // Build the profile section with adjusted image position
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: null,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Cart and Notification Buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.shopping_cart),
-                  onPressed: () {
-                    // Navigate to the shopping cart page if you have one
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.notifications),
-                  onPressed: () {
-                    // Navigate to the notifications page
-                  },
-                ),
-              ],
-            ),
-            // Profile Section
-            Center(
-              child: CircleAvatar(
-                radius: 40,
-                backgroundImage: _profileImageUrl != null
-                    ? NetworkImage(_profileImageUrl!)
-                    : null,
-                child: _profileImageUrl == null
-                    ? Icon(Icons.person, size: 50, color: Colors.indigo[900])
-                    : null,
-              ),
-            ),
-            SizedBox(height: 8),
-            Center(
-              child: Text(
-                _userName ?? 'Loading...',  // Display the user's name or 'Loading...' if it's not available
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
-            SizedBox(height: 20),
-
-            // Profile and Transaction History Links
-            ListTile(
-              title: Text('Profile'),
-              trailing: Icon(Icons.arrow_forward_ios),
-              onTap: () async {
-                // Navigate to the Profile page and wait for the new image URL after the update
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ProfilePage()),
-                );
-
-                // If the result is not null, update the profile image URL
-                if (result != null) {
-                  _updateProfileImageUrl(result);
-                }
-              },
-            ),
-            // Transaction History with two subtile options shown directly
-            ListTile(
-              title: Text('Transaction History', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 32.0),
-              child: Column(
-                children: [
-                  ListTile(
-                    title: Text('My Purchases'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('View All Purchases', style: TextStyle(color: Colors.blueGrey)),
-                        Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blueGrey),
-                      ],
-                    ),
-                    onTap: () {
-                      // Navigate to My Purchases page
-                      print('Navigating to My Purchases');
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PendingOrderScreen(userId: _user.uid), // Navigate to PendingOrderScreen
-                        ),
-                      );
-                    },
+      backgroundColor: Colors.yellow.shade50,  // Set the background color to yellow
+      appBar: AppBar(
+        backgroundColor: Colors.yellow.shade50,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            children: [
+              // Profile Section
+              Padding(
+                padding: const EdgeInsets.only(top: 1.0), // Adjust to position the image properly
+                child: Center(
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: _profileImageUrl != null
+                        ? NetworkImage(_profileImageUrl!)
+                        : null,
+                    child: _profileImageUrl == null
+                        ? Icon(Icons.person, size: 60, color: Colors.indigo[900])
+                        : null,
                   ),
-                  ListTile(
-                    title: Text('My Sales'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('View All Sales', style: TextStyle(color: Colors.blueGrey)),
-                        Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blueGrey),
-                      ],
-                    ),
-                    onTap: () {
-                      // Navigate to My Sales page
-                      print('Navigating to My Sales');
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MySalesScreen(), // Navigate to MySalesScreen
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                ),
               ),
-            ),
+              SizedBox(height: 8),
+              Center(
+                child: Text(
+                  _userName ?? 'Loading...', // Display the user's name or 'Loading...' if it's not available
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+              SizedBox(height: 20),
 
-            // AI Chatbot Toggle
-            ListTile(
-              title: Text('AI Chatbot'),
-              trailing: Switch(
-                value: _isAiChatbotEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _isAiChatbotEnabled = value;
-                  });
+              // Profile and Transaction History Links
+              ListTile(
+                title: Text('Profile'),
+                trailing: Icon(Icons.arrow_forward_ios),
+                onTap: () async {
+                  // Navigate to the Profile page and wait for the new image URL after the update
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ProfilePage()),
+                  );
+
+                  // If the result is not null, update the profile image URL
+                  if (result != null) {
+                    _updateProfileImageUrl(result);
+                  }
                 },
               ),
-            ),
-
-            // Log Out Button
-            ListTile(
-              title: Text('Log Out'),
-              textColor: Colors.red,
-              onTap: _logout,
-            ),
-
-            SizedBox(height: 20),
-
-            // "Go Shopping Now!" Button
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomeScreen()), // Navigate to home or shopping page
-                      (Route<dynamic> route) => false,
-                );
-              },
-              child: Text('Go Shopping Now!'),
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white, backgroundColor: Colors.black, minimumSize: Size(double.infinity, 50),
+              Divider(color: Colors.yellowAccent.shade200.withOpacity(0.4)),
+              // Transaction History with two subtile options shown directly
+              ListTile(
+                title: Text('Transaction History', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.only(left: 32.0),
+                child: Column(
+                  children: [
+                    ListTile(
+                      title: Text('My Purchases'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('View All Purchases', style: TextStyle(color: Colors.blueGrey)),
+                          Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blueGrey),
+                        ],
+                      ),
+                      onTap: () {
+                        // Navigate to My Purchases page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PendingOrderScreen(userId: 'userId'),
+                          ),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      title: Text('My Sales'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('View All Sales', style: TextStyle(color: Colors.blueGrey)),
+                          Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blueGrey),
+                        ],
+                      ),
+                      onTap: () {
+                        // Navigate to My Sales page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MySalesScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Divider(color: Colors.yellowAccent.shade200.withOpacity(0.4)),
+
+              // AI Chatbot Toggle
+              ListTile(
+                title: Text('AI Chatbot'),
+                trailing: Switch(
+                  value: _isAiChatbotEnabled,
+                  onChanged: (value) {
+                    setState(() {
+                      _isAiChatbotEnabled = value;
+                    });
+                  },
+                ),
+              ),
+
+              Divider(color: Colors.yellowAccent.shade200.withOpacity(0.4)),
+
+              // Log Out Button
+              ListTile(
+                title: Text('Log Out'),
+                textColor: Colors.red,
+                onTap: _logout,
+              ),
+
+              SizedBox(height: 20),
+
+              // "Go Shopping Now!" Button
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomeScreen()),
+                        (Route<dynamic> route) => false,
+                  );
+                },
+                child: Text('Go Shopping Now!'),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.black,
+                  minimumSize: Size(double.infinity, 50),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: BottomNavigationBarWidget(
         currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-            backgroundColor: Colors.blue, // Set background color to blue
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'Chats',
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: 'Notifications',
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Me',
-            backgroundColor: Colors.blue, // Set background color to blue
-          ),
-        ],
-        selectedItemColor: Colors.yellow, // Set selected item text and icon color to white
-        unselectedItemColor: Colors.white, // Set unselected item text and icon color to white
-        showUnselectedLabels: true, // Ensure unselected labels are visible
-        type: BottomNavigationBarType.fixed, // Prevent icon shifting by keeping them fixed
-        iconSize: 30.0, // Set icon size to a consistent value for all items
-        backgroundColor: Colors.blue,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
       ),
     );
   }

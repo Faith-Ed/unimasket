@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../widgets/floatingButton.dart';
 import 'viewListingDetails.dart'; // Import the ViewListingDetails screen
 import 'cart.dart';
 import 'chatBot.dart';
@@ -26,19 +28,28 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
       _isLoading = true;
     });
 
+    // Start with the base query to fetch service listings with 'active' status
     Query query = FirebaseFirestore.instance
         .collection('listings')
         .where('listingStatus', isEqualTo: 'active') // Only active listings
         .where('listingType', isEqualTo: 'service') // Only service listings
         .orderBy('timestamp', descending: true); // Sort by timestamp
 
+    // Apply search query filter only if there is a search query
+    if (_searchQuery != '' && _searchQuery != null) {
+      String searchQueryLower = _searchQuery!.toLowerCase();
+      query = query
+          .where('name', isGreaterThanOrEqualTo: searchQueryLower)
+          .where('name', isLessThanOrEqualTo: searchQueryLower + '\uf8ff');
+    }
+
     // Apply service category filter only if a category is selected
-    if (_selectedServiceCategory != null) {
+    if (_selectedServiceCategory != null && _selectedServiceCategory!.isNotEmpty) {
       query = query.where('category', isEqualTo: _selectedServiceCategory);
     }
 
     // Apply condition filter only if a condition is selected
-    if (_selectedCondition != null) {
+    if (_selectedCondition != null && _selectedCondition!.isNotEmpty) {
       query = query.where('condition', isEqualTo: _selectedCondition);
     }
 
@@ -146,6 +157,21 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
           }),
           SizedBox(height: 20),
 
+          // Condition Filter (New or Used)
+          Text("Condition", style: TextStyle(fontWeight: FontWeight.bold)),
+          ...['new', 'used'].map((condition) {
+            return CheckboxListTile(
+              value: _selectedCondition == condition,
+              title: Text(condition),
+              onChanged: (value) {
+                setState(() {
+                  _selectedCondition = value! ? condition : null;
+                });
+              },
+            );
+          }),
+          SizedBox(height: 20),
+
           // Apply Filter Button
           ElevatedButton(
             onPressed: () {
@@ -224,8 +250,8 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
                   : _serviceListings.isEmpty
                   ? Center(child: Text('No services available.'))
                   : GridView.builder(
-                shrinkWrap: true,  // Limit the size of the GridView
-                physics: NeverScrollableScrollPhysics(),  // Disable scrolling for GridView inside SingleChildScrollView
+                shrinkWrap: true, // Limit the size of the GridView
+                physics: NeverScrollableScrollPhysics(), // Disable scrolling for GridView inside SingleChildScrollView
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2, // 2 cards per row
                   crossAxisSpacing: 8.0, // Spacing between cards
@@ -241,19 +267,7 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
           ),
         ),
       ),
-      floatingActionButton: Tooltip(
-        message: 'Chat with Bot',  // The tooltip message for the floating button
-        child: FloatingActionButton(
-          onPressed: () {
-            // Open Chatbot
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ChatBot()),
-            );
-          },
-          child: Icon(Icons.flutter_dash),
-        ),
-      ),
+      floatingActionButton: CustomFloatingActionButton(), // Call the custom floating action button here
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }

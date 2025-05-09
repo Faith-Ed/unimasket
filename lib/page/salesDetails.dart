@@ -358,8 +358,6 @@ class _SalesDetailsScreenState extends State<SalesDetailsScreen> with TickerProv
                           );
                         }).toList(),
                       ),
-                      const SizedBox(height: 10),
-
                       // If there is a service and it belongs to the current user, display the service details
                       if (creatorId == FirebaseAuth.instance.currentUser!.uid)
                         Padding(
@@ -367,11 +365,6 @@ class _SalesDetailsScreenState extends State<SalesDetailsScreen> with TickerProv
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                "Service Details",
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 10),
                               Row(
                                 children: [
                                   ClipRRect(

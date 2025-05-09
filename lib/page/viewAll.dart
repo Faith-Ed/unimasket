@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../widgets/floatingButton.dart';
 import 'cart.dart';
 import 'chatBot.dart';
 import 'viewListingDetails.dart'; // Import the ViewListingDetails screen
@@ -255,8 +257,19 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
+      backgroundColor: Colors.yellow.shade50,
       endDrawer: _buildFilterDrawer(),
-      appBar: AppBar(
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(70), // Set the height of the AppBar
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(10),  // Set left bottom corner radius
+            bottomRight: Radius.circular(10),  // Set right bottom corner radius
+          ),
+          child: AppBar(
+            toolbarHeight: 80, // Toolbar height remains as per your request
+            title: Text('Notifications', style: TextStyle(color: Colors.white)),
+            backgroundColor: CupertinoColors.systemYellow,  // AppBar background color
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -297,10 +310,10 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
             },
           ),
         ],
-      ),
+      ),),),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(2.0),
           child: Column(
             children: [
               FutureBuilder<List<Map<String, dynamic>>>(
@@ -316,8 +329,8 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                       physics: NeverScrollableScrollPhysics(),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        crossAxisSpacing: 8.0,
-                        mainAxisSpacing: 8.0,
+                        crossAxisSpacing: 2.0,
+                        mainAxisSpacing: 2.0,
                         childAspectRatio: 0.75,
                       ),
                       itemCount: snapshot.data!.length,
@@ -332,19 +345,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
           ),
         ),
       ),
-      floatingActionButton: Tooltip(
-        message: 'Chat with Bot',  // The tooltip message for the floating button
-        child: FloatingActionButton(
-          onPressed: () {
-            // Open Chatbot
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ChatBot()),
-            );
-          },
-          child: Icon(Icons.flutter_dash),
-        ),
-      ),
+      floatingActionButton: CustomFloatingActionButton(), // Call the custom floating action button here
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }

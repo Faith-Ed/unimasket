@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:redofyp/page/pageDesign.dart';
 
 class BuyerOrderCompleteScreen extends StatefulWidget {
   final String orderId;  // Pass the order ID to this screen
@@ -274,9 +275,8 @@ class _BuyerOrderCompleteScreenState extends State<BuyerOrderCompleteScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Order Complete'),
-      ),
+      backgroundColor: Colors.yellow.shade50,
+      appBar: customAppBar('Order Complete'),
       body: FutureBuilder<DocumentSnapshot>(
         future: _orderFuture,
         builder: (context, snapshot) {

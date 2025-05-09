@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:redofyp/page/pageDesign.dart';
 import 'package:redofyp/page/viewListingDetails.dart';
 
 class ListingUpdatesScreen extends StatefulWidget {
@@ -211,9 +212,8 @@ class _ListingUpdatesScreenState extends State<ListingUpdatesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Listing Updates'),
-      ),
+      backgroundColor: Colors.yellow.shade50,
+      appBar: customAppBar('Item Updates'),
       body: _buildNotificationList(),
     );
   }

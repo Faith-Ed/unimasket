@@ -17,11 +17,17 @@ class _AuthCheckerState extends State<AuthChecker> {
     // Listen for authentication state changes
     _auth.authStateChanges().listen((User? user) {
       if (!mounted) return;
-      if (user != null) {
-        // If user is authenticated, navigate to home screen
+      if (user != null && user.emailVerified) {
+        // If user is authenticated and email is verified, navigate to home screen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      } else if (user != null && !user.emailVerified) {
+        // If user is authenticated but email is not verified, navigate to login screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
         );
       } else {
         // If no user is authenticated, navigate to login screen

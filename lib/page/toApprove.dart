@@ -473,6 +473,7 @@ class _ToApproveScreenState extends State<ToApproveScreen> {
     final status = orderData['status'];
     final paymentMethod = orderData['paymentMethod'];
     final collectionOption = orderData['collectionOption'];
+    final String deliveryLocation = orderData['deliveryLocation'] ?? '';
     final List<dynamic> products = orderData['products'] ?? [];
     final Map service = orderData['services'] ?? {};  // Single service map
     final creatorId = orderData['creatorId'];
@@ -560,16 +561,27 @@ class _ToApproveScreenState extends State<ToApproveScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,  // Align items to the start
                           children: [
                             Text(
                               'Collection Option: ',
                               style: TextStyle(fontWeight: FontWeight.bold), // Bold label
                             ),
-                            Text(
-                              '$collectionOption',
-                              style: TextStyle(fontWeight: FontWeight.normal), // Normal value
-                            ),
+                            Text.rich(
+                              TextSpan(
+                                text: collectionOption == 'Delivery' && deliveryLocation.isNotEmpty
+                                    ? 'Delivery '  // Show 'Delivery' first
+                                    : collectionOption,  // If not Delivery, just show collectionOption
+                                style: TextStyle(fontWeight: FontWeight.normal),  // Normal value for 'Delivery' or other options
+                                children: [
+                                  if (collectionOption == 'Delivery' && deliveryLocation.isNotEmpty)
+                                    TextSpan(
+                                      text: '($deliveryLocation)',  // Display delivery location
+                                      style: TextStyle(color: Colors.redAccent),  // Color just for delivery location
+                                    ),
+                                ],
+                              ),
+                            )
                           ],
                         ),
                         SizedBox(height: 8),

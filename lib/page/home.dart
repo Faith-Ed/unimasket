@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -8,11 +9,11 @@ import 'package:redofyp/page/viewProduct.dart';
 import 'package:redofyp/page/viewService.dart';
 import '../auth/login_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../widgets/floatingButton.dart';
 import 'bottomNavigationBar.dart';
 import 'cart.dart';
 import 'chatBot.dart';
 import 'create_listing.dart'; // Import CreateListingScreen
-import 'me_menu.dart'; // Import me_menu.dart
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -85,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
       child: Card(
-        margin: EdgeInsets.all(8.0),
+        margin: EdgeInsets.all(5.0),
         child: Column(
           children: [
             // Use Image.network for displaying images from a URL
@@ -121,69 +122,97 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('UniMASKET'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search),
-            onPressed: () {},
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(70), // Set the height of the AppBar
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(10),  // Set left bottom corner radius
+            bottomRight: Radius.circular(10),  // Set right bottom corner radius
           ),
-          IconButton(
-            icon: Icon(Icons.shopping_cart),
-            onPressed: () {
-              // Navigate to the CartScreen
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CartScreen(userId: FirebaseAuth.instance.currentUser!.uid),
-                ),
-              );
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 15),
-            child: Tooltip(
-              message: 'Sell',  // The label to show when user taps/hover
-              child: IconButton(
-                icon: Icon(
-                  Icons.sell, // Use sell icon for the button
-                  size: 22,
-                ),
+          child: AppBar(
+            toolbarHeight: 80, // Toolbar height remains as per your request
+            title: Text('UniMASKET', style: TextStyle(color: Colors.white)),
+            backgroundColor: CupertinoColors.systemYellow,  // AppBar background color
+            actions: [
+              IconButton(
+                icon: Icon(Icons.search, color: Colors.black),
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: Icon(Icons.shopping_cart, color: Colors.black),
                 onPressed: () {
-                  // Navigate to CreateListingScreen
+                  // Navigate to the CartScreen
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => CreateListingScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => CartScreen(userId: FirebaseAuth.instance.currentUser!.uid),
+                    ),
                   );
                 },
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.only(right: 15),
+                child: Tooltip(
+                  message: 'Sell',  // The label to show when user taps/hover
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.sell, // Use sell icon for the button
+                      size: 22,
+                      color: Colors.black,  // Icon color
+                    ),
+                    onPressed: () {
+                      // Navigate to CreateListingScreen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CreateListingScreen()),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-      body: SingleChildScrollView(  // Wrap the entire body in SingleChildScrollView for vertical scrolling
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
+              // Image preview section
+              Container(
+                width: double.infinity,
+                height: 200, // Set a fixed height for the image container
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/ecommerce.png'), // Image asset for preview
+                    fit: BoxFit.cover,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              SizedBox(height: 10),
               // New Listings Section
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('New', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                    TextButton(
-                      onPressed: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context)=> ViewAllScreen()),
-                        );
-                      },
-                      child: Text('See All'),
-                    ),
-                  ],
+              ColoredBox(
+                color: Colors.pink.shade400,  // Set background color to black
+                child: Padding(
+                  padding: const EdgeInsets.all(1.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('   New', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white)),
+                      TextButton(
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ViewAllScreen()),
+                          );
+                        },
+                        child: Text('See All', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -215,23 +244,26 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
 
               // Products Section
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Products', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                    TextButton(
-                      onPressed: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context)=> ViewProductScreen()),
-                        );
-                      },
-                      child: Text('See All'),
-                    ),
-                  ],
+              ColoredBox(
+                color: Colors.pink.shade400,   // Set background color to black
+                child: Padding(
+                  padding: const EdgeInsets.all(3.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('   Products', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white)),
+                      TextButton(
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ViewProductScreen()),
+                          );
+                        },
+                        child: Text('See All', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               FutureBuilder<List<Map<String, dynamic>>>(
@@ -261,23 +293,27 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
 
               // Services Section
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Services', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                    TextButton(
-                      onPressed: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context)=> ViewServiceScreen()),
-                        );
-                      },
-                      child: Text('See All'),
-                    ),
-                  ],
+              // Services Section with black background and white text
+              ColoredBox(
+                color: Colors.pink.shade400, // Set background color to black
+                child: Padding(
+                  padding: const EdgeInsets.all(3.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('   Services', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white)),
+                      TextButton(
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ViewServiceScreen()),
+                          );
+                        },
+                        child: Text('See All', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               FutureBuilder<List<Map<String, dynamic>>>(
@@ -317,19 +353,7 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
       ),
-      floatingActionButton: Tooltip(
-        message: 'Chat with Bot',  // The tooltip message for the floating button
-        child: FloatingActionButton(
-          onPressed: () {
-            // Open Chatbot
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ChatBot()),
-            );
-          },
-          child: Icon(Icons.flutter_dash),
-        ),
-      ),
+      floatingActionButton: CustomFloatingActionButton(), // Call the custom floating action button here
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
