@@ -250,7 +250,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 mainAxisAlignment: MainAxisAlignment.start, // Align at the top
                 children: [
                   Image.asset(
-                      'assets/logo.png', height: 150, width: 150),
+                      'assets/unimasLogo.png', height: 150, width: 150),
                   Align(
                     alignment: Alignment.centerLeft, // Align it to the left
                     child: Text(
@@ -279,7 +279,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                           _buildTextField(
                             controller: _emailController,
-                            labelText: 'Email',
+                            labelText: 'UNIMAS Email',
                             obscureText: false,
                             errorText: emailError,
                           ),

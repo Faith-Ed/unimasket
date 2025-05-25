@@ -6,6 +6,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:googleapis_auth/googleapis_auth.dart';
 
+import '../widgets/pageDesign.dart';
+
 
 class ChatBot extends StatefulWidget {
   const ChatBot({Key? key}) : super(key: key);
@@ -59,10 +61,8 @@ class _ChatBotState extends State<ChatBot> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade900,  // Set background color to black
-      appBar: AppBar(
-        title: Text('Chatbot'),
-      ),
+      backgroundColor: Colors.yellow.shade50,
+      appBar: customAppBar('Chatbot'),
       body: Column(
         children: [
           // If FAQ is visible, show the prompt and FAQ topics
@@ -74,7 +74,7 @@ class _ChatBotState extends State<ChatBot> {
                 children: [
                   Text(
                     'What can I help you?',
-                    style: TextStyle(fontSize: 24, color: Colors.white),
+                    style: TextStyle(fontSize: 24, color: Colors.black),
                   ),
                   SizedBox(height: 20),
                   // FAQ Topic buttons inside a Wrap widget to avoid overflow

@@ -229,7 +229,7 @@
 //             .height, // Full screen height
 //         decoration: BoxDecoration(
 //           image: DecorationImage(
-//             image: AssetImage('assets/unimas.png'), // Background image
+//             image: AssetImage('assets/unimaspic.jpeg'), // Background image
 //             fit: BoxFit.cover, // Cover the whole screen
 //           ),
 //         ),
@@ -250,7 +250,7 @@
 //                 mainAxisAlignment: MainAxisAlignment.start, // Align at the top
 //                 children: [
 //                   Image.asset(
-//                       'assets/unimas_logo.png', height: 150, width: 150),
+//                       'assets/logo.png', height: 150, width: 150),
 //                   Align(
 //                     alignment: Alignment.centerLeft, // Align it to the left
 //                     child: Text(

@@ -53,6 +53,9 @@
 //         .then((snapshot) {
 //       if (snapshot.exists && snapshot.data() != null) {
 //         _orderTotalController.text = snapshot.data()!['totalPrice']?.toString() ?? '0.00'; // Update the order total
+//       }else {
+//         print("Error: Order not found");
+//         // Handle case where order does not exist
 //       }
 //     });
 //   }
@@ -188,6 +191,12 @@
 //     );
 //   }
 //
+//   String _getConversationId(String senderId, String receiverId) {
+//     return senderId.hashCode <= receiverId.hashCode
+//         ? '$senderId-$receiverId' // Format as id1-id2
+//         : '$receiverId-$senderId'; // Format as id2-id1
+//   }
+//
 // // Send Accepted Order and Save the Information in Subcollection
 //   Future<void> _sendAcceptedOrder(String collectionOptionType, String pickupLocation, String deliveryTime) async {
 //     try {
@@ -196,11 +205,47 @@
 //       final paymentMethod = orderSnapshot.data()!['paymentMethod'];  // Fetch the payment method
 //
 //       // Generate the messageId
-//       String messageId = _getMessageId(_currentUserId, receiverId);
+//       String conversationId = _getConversationId(_currentUserId, receiverId);
 //
-//       // Update order status to 'Declined'
+//       // Get products array from the order
+//       final List<dynamic> products = orderSnapshot.data()?['products'] ?? [];
+//
+//       // Update product status to 'Declined'
+//       for (var i = 0; i < products.length; i++) {
+//         if (products[i]['creatorId'] == _currentUserId) {
+//           // Update the product's status if the product's creatorId matches the current user's id
+//           products[i]['status'] = 'Accepted';
+//
+//           // Get the listingId and quantity from the product
+//           String listingId = products[i]['listingId'];
+//           int orderQuantity = products[i]['orderQuantity'];
+//
+//           // Update the stock quantity in the listings collection
+//           await FirebaseFirestore.instance.collection('listings')
+//               .doc(listingId) // Get the document of the listing by listingId
+//               .update({
+//             'quantity': FieldValue.increment(-orderQuantity), // Reduce the stock by order quantity
+//           });
+//
+//           // Check if the quantity is 0 and update listingStatus to 'inactive' if so
+//           final listingSnapshot = await FirebaseFirestore.instance.collection('listings')
+//               .doc(listingId).get();
+//
+//           int updatedQuantity = listingSnapshot.data()?['quantity'] ?? 0;
+//           if (updatedQuantity == 0) {
+//             await FirebaseFirestore.instance.collection('listings')
+//                 .doc(listingId)
+//                 .update({
+//               'listingStatus': 'inactive', // Set listingStatus to 'inactive' when quantity is 0
+//             });
+//           }
+//         }
+//       }
+//
+//       // Update the products array in the Firestore order document
 //       await FirebaseFirestore.instance.collection('orders').doc(widget.orderId).update({
-//         'status': 'Accepted',
+//         'status': 'Accepted',  // Set the overall order status to Declined
+//         'products': products,  // Update the products array with the modified product statuses
 //       });
 //
 //       // Prepare the data for accepted_notes subcollection
@@ -248,6 +293,8 @@
 //       if (qrCodeUrl.isNotEmpty) {
 //         messageContent += '\nQR Code for Payment: \n';
 //       }
+//
+//       String messageId = _getConversationId(_currentUserId, receiverId);
 //
 //       // Create or update a message in the 'messages' collection for this order
 //       final currentTime = FieldValue.serverTimestamp();
@@ -358,9 +405,21 @@
 //       // Ensure that we get the same messageId regardless of the order of senderId and receiverId
 //       String messageId = _getMessageId(currentUserId, receiverId);
 //
-//       // Update order status to 'Declined'
+//       // Get products array from the order
+//       final List<dynamic> products = orderSnapshot.data()?['products'] ?? [];
+//
+//       // Update product status to 'Declined'
+//       for (var i = 0; i < products.length; i++) {
+//         if (products[i]['creatorId'] == currentUserId) {
+//           // Update the product's status if the product's creatorId matches the current user's id
+//           products[i]['status'] = 'Declined';
+//         }
+//       }
+//
+//       // Update the products array in the Firestore order document
 //       await FirebaseFirestore.instance.collection('orders').doc(widget.orderId).update({
-//         'status': 'Declined',
+//         'status': 'Declined',  // Set the overall order status to Declined
+//         'products': products,  // Update the products array with the modified product statuses
 //       });
 //
 //       // Create a message in the 'messages' collection for this order
@@ -417,6 +476,7 @@
 //     final status = orderData['status'];
 //     final paymentMethod = orderData['paymentMethod'];
 //     final collectionOption = orderData['collectionOption'];
+//     final String deliveryLocation = orderData['deliveryLocation'] ?? '';
 //     final List<dynamic> products = orderData['products'] ?? [];
 //     final Map service = orderData['services'] ?? {};  // Single service map
 //     final creatorId = orderData['creatorId'];
@@ -504,16 +564,27 @@
 //                       crossAxisAlignment: CrossAxisAlignment.start,
 //                       children: [
 //                         Row(
-//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,  // Align items to the start
 //                           children: [
 //                             Text(
 //                               'Collection Option: ',
 //                               style: TextStyle(fontWeight: FontWeight.bold), // Bold label
 //                             ),
-//                             Text(
-//                               '$collectionOption',
-//                               style: TextStyle(fontWeight: FontWeight.normal), // Normal value
-//                             ),
+//                             Text.rich(
+//                               TextSpan(
+//                                 text: collectionOption == 'Delivery' && deliveryLocation.isNotEmpty
+//                                     ? 'Delivery '  // Show 'Delivery' first
+//                                     : collectionOption,  // If not Delivery, just show collectionOption
+//                                 style: TextStyle(fontWeight: FontWeight.normal),  // Normal value for 'Delivery' or other options
+//                                 children: [
+//                                   if (collectionOption == 'Delivery' && deliveryLocation.isNotEmpty)
+//                                     TextSpan(
+//                                       text: '($deliveryLocation)',  // Display delivery location
+//                                       style: TextStyle(color: Colors.redAccent),  // Color just for delivery location
+//                                     ),
+//                                 ],
+//                               ),
+//                             )
 //                           ],
 //                         ),
 //                         SizedBox(height: 8),

@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:redofyp/auth/register_user.dart';
-import 'package:redofyp/page/home.dart';
+import 'package:redofyp/page/main/home.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -108,16 +108,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center, // Center content vertically
                 children: [
                   // Logo at the top
-                  Image.asset('assets/logo.png', height: 180, width: 180),
+                  Image.asset('assets/unimasLogo.png', height: 180, width: 180),
                   SizedBox(height: 20),
 
                   // "Login" label above the container
-                  Text(
-                    'Login',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                  Align(
+                    alignment: Alignment.centerLeft, // Align it to the left
+                    child: Text(
+                      'Login',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
                     ),
                   ),
                   SizedBox(height: 20),

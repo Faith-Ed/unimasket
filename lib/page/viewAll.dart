@@ -2,10 +2,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/ai_chatbot_state.dart';
 import '../widgets/floatingButton.dart';
-import 'cart.dart';
+import 'cart/cart.dart';
 import 'chatBot.dart';
-import 'viewListingDetails.dart'; // Import the ViewListingDetails screen
+import 'listing/viewListingDetails.dart'; // Import the ViewListingDetails screen
 
 class ViewAllScreen extends StatefulWidget {
   @override
@@ -345,7 +346,12 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
           ),
         ),
       ),
-      floatingActionButton: CustomFloatingActionButton(), // Call the custom floating action button here
+      floatingActionButton: ValueListenableBuilder<bool>(
+        valueListenable: AiChatbotState().isEnabled,
+        builder: (context, isEnabled, _) {
+          return isEnabled ? CustomFloatingActionButton() : SizedBox.shrink();
+        },
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }

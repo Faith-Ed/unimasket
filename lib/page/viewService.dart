@@ -2,9 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/ai_chatbot_state.dart';
 import '../widgets/floatingButton.dart';
-import 'viewListingDetails.dart'; // Import the ViewListingDetails screen
-import 'cart.dart';
+import 'listing/viewListingDetails.dart'; // Import the ViewListingDetails screen
+import 'cart/cart.dart';
 import 'chatBot.dart';
 
 class ViewServiceScreen extends StatefulWidget {
@@ -196,8 +197,17 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
     return Scaffold(
       key: _scaffoldKey,
       endDrawer: _buildFilterDrawer(),
-      appBar: AppBar(
-        title: Text('Services'),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(70), // Set the height of the AppBar
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(10),  // Set left bottom corner radius
+            bottomRight: Radius.circular(10),  // Set right bottom corner radius
+          ),
+          child: AppBar(
+            toolbarHeight: 80, // Toolbar height remains as per your request
+            title: Text('Services', style: TextStyle(color: Colors.white)),
+            backgroundColor: CupertinoColors.systemYellow,  // AppBar background color
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -239,7 +249,7 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
             },
           ),
         ],
-      ),
+      ),),),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -267,7 +277,12 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
           ),
         ),
       ),
-      floatingActionButton: CustomFloatingActionButton(), // Call the custom floating action button here
+      floatingActionButton: ValueListenableBuilder<bool>(
+        valueListenable: AiChatbotState().isEnabled,
+        builder: (context, isEnabled, _) {
+          return isEnabled ? CustomFloatingActionButton() : SizedBox.shrink();
+        },
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }

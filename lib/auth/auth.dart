@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:redofyp/auth/login_user.dart';
-import 'package:redofyp/page/home.dart';
+import 'package:redofyp/page/main/home.dart';
 
 class AuthChecker extends StatefulWidget {
   @override

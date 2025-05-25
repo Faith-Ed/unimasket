@@ -1,8 +1,9 @@
-// import 'package:flutter/material.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:flutter/cupertino.dart';
+// import 'package:flutter/material.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:intl/intl.dart';
-// import 'bottomNavigationBar.dart';
+// import '../widgets/bottomNavigationBar.dart';
 // import 'messageDetail.dart'; // Import the message detail page
 //
 // class MessagingScreen extends StatefulWidget {
@@ -46,40 +47,16 @@
 //       for (var doc in allDocs) {
 //         final messageData = doc.data() as Map<String, dynamic>;
 //         final senderId = messageData['senderId'];
+//         final receiverId = messageData['receiverId'];
 //
-//         // If the senderId is not in the map, add it
-//         if (!groupedMessages.containsKey(senderId)) {
-//           groupedMessages[senderId] = [];
+//         // Create conversationId from senderId and receiverId
+//         String conversationId = _createConversationId(senderId, receiverId);
+//
+//         // If the conversationId is not in the map, add it
+//         if (!groupedMessages.containsKey(conversationId)) {
+//           groupedMessages[conversationId] = [];
 //         }
-//         groupedMessages[senderId]!.add(doc);  // Add the message to the group of the senderId
-//       }
-//
-//       // Fetch the latest message content from the chat subcollection
-//       for (String senderId in groupedMessages.keys) {
-//         final docs = groupedMessages[senderId]!;
-//
-//         for (var doc in docs) {
-//           final lastMessageData = doc.data() as Map<String, dynamic>;
-//
-//           // Fetch the chat subcollection to get the last message
-//           QuerySnapshot chatSnapshot = await FirebaseFirestore.instance
-//               .collection('messages')
-//               .doc(doc.id)
-//               .collection('chats')
-//               .orderBy('timestamp', descending: true) // Order chats by timestamp to get the last message
-//               .limit(1) // Limit to just the latest message
-//               .get();
-//
-//           if (chatSnapshot.docs.isNotEmpty) {
-//             final lastMessageDoc = chatSnapshot.docs.first.data() as Map<String, dynamic>;
-//
-//             // Now, update the Firestore document with the latest message content
-//             await FirebaseFirestore.instance.collection('messages').doc(doc.id).update({
-//               'lastMessage': lastMessageDoc['content'],
-//               'lastUpdated': FieldValue.serverTimestamp(), // Update the timestamp of the last message
-//             });
-//           }
-//         }
+//         groupedMessages[conversationId]!.add(doc);  // Add the message to the group of the conversationId
 //       }
 //
 //       setState(() {
@@ -90,6 +67,13 @@
 //         SnackBar(content: Text('Failed to load messages: $e')),
 //       );
 //     }
+//   }
+//
+//   // Create a unique conversation ID by sorting senderId and receiverId
+//   String _createConversationId(String senderId, String receiverId) {
+//     List<String> ids = [senderId, receiverId];
+//     ids.sort();
+//     return ids.join('-');
 //   }
 //
 //   // Fetch sender's profile photo from the 'photo_profile' subcollection
@@ -135,10 +119,20 @@
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text('Messages'),
-//         automaticallyImplyLeading: false,
-//       ),
+//       backgroundColor: Colors.yellow.shade50,
+//       appBar: PreferredSize(
+//         preferredSize: Size.fromHeight(70), // Set the height of the AppBar
+//         child: ClipRRect(
+//           borderRadius: BorderRadius.only(
+//             bottomLeft: Radius.circular(10),  // Set left bottom corner radius
+//             bottomRight: Radius.circular(10),  // Set right bottom corner radius
+//           ),
+//           child: AppBar(
+//             toolbarHeight: 80, // Toolbar height remains as per your request
+//             title: Text('Chats', style: TextStyle(color: Colors.white)),
+//             backgroundColor: CupertinoColors.systemYellow,  // AppBar background color
+//             automaticallyImplyLeading: false,
+//           ),),),
 //       body: Padding(
 //         padding: const EdgeInsets.all(16.0),
 //         child: _groupedMessages.isEmpty
@@ -146,15 +140,21 @@
 //             : ListView.builder(
 //           itemCount: _groupedMessages.length,
 //           itemBuilder: (context, index) {
-//             String senderId = _groupedMessages.keys.elementAt(index);
-//             List<DocumentSnapshot> messageDocs = _groupedMessages[senderId]!;
+//             String conversationId = _groupedMessages.keys.elementAt(index);
+//             List<DocumentSnapshot> messageDocs = _groupedMessages[conversationId]!;
 //
-//             final messageData = messageDocs.first.data() as Map<String, dynamic>;
+//             final messageData = messageDocs.last.data() as Map<String, dynamic>;
 //             final messageContent = messageData['lastMessage'] ?? 'No content';
 //             final timestamp = messageData['lastUpdated'].toDate();
 //
+//             String senderId = messageData['senderId'];
+//             String receiverId = messageData['receiverId'];
+//
+//             // Determine the other user in the conversation
+//             String otherUserId = senderId == _userId ? receiverId : senderId;
+//
 //             return FutureBuilder<String>(
-//               future: _getSenderProfilePhoto(senderId),
+//               future: _getSenderProfilePhoto(otherUserId),
 //               builder: (context, snapshot) {
 //                 if (snapshot.connectionState == ConnectionState.waiting) {
 //                   return ListTile(
@@ -165,7 +165,7 @@
 //                 String senderProfileImage = snapshot.data ?? 'https://via.placeholder.com/150';
 //
 //                 return FutureBuilder<String>(
-//                   future: _getSenderFullName(senderId),
+//                   future: _getSenderFullName(otherUserId),
 //                   builder: (context, nameSnapshot) {
 //                     if (nameSnapshot.connectionState == ConnectionState.waiting) {
 //                       return ListTile(
@@ -188,7 +188,9 @@
 //                           style: const TextStyle(fontWeight: FontWeight.bold),
 //                         ),
 //                         subtitle: Text(
-//                           messageContent,
+//                           messageContent == "[photo]"
+//                               ? '[Photo]'
+//                               : messageContent, // Display '[Photo]' for image-only messages
 //                           maxLines: 1,
 //                           overflow: TextOverflow.ellipsis,
 //                           style: TextStyle(color: Colors.grey[700]),
@@ -198,15 +200,14 @@
 //                           style: TextStyle(fontSize: 12, color: Colors.grey[600]),
 //                         ),
 //                         onTap: () {
-//                           // Navigate to the message details page
 //                           Navigator.push(
 //                             context,
 //                             MaterialPageRoute(
 //                               builder: (context) => MessageDetailsPage(
-//                                 conversationId: messageDocs.first.id,  // Use messageDoc ID as conversation ID
-//                                 senderId: senderId,  // Pass senderId
-//                                 receiverId: _userId,  // Current user as receiverId
-//                                 messageContent: messageContent,  // Pass the message content
+//                                 conversationId: conversationId,
+//                                 senderId: senderId,
+//                                 receiverId: receiverId,
+//                                 messageContent: messageContent,
 //                               ),
 //                             ),
 //                           );

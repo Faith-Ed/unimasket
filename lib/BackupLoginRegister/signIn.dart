@@ -16,17 +16,6 @@
 //   String passwordError = '';
 //   bool _passwordVisible = false;
 //
-//   void _showErrorSnackBar(String message) {
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(
-//         content: Text(message),
-//         behavior: SnackBarBehavior.floating,
-//         backgroundColor: Colors.black,
-//         duration: Duration(seconds: 10),
-//       ),
-//     );
-//   }
-//
 //   Future<void> _login() async {
 //     setState(() {
 //       emailError = '';
@@ -52,20 +41,6 @@
 //     }
 //
 //     try {
-//       // Check if the email is already registered before attempting to sign in
-//       final signInMethods = await _auth.fetchSignInMethodsForEmail(email);
-//
-//       if (signInMethods.isEmpty) {
-//         // If the email is not found, show an error and redirect to the Register screen
-//         _showErrorSnackBar('Email is not registered. Please sign up first.');
-//         // Redirect to register screen
-//         Navigator.pushReplacement(
-//           context,
-//           MaterialPageRoute(builder: (context) => RegisterScreen()),
-//         );
-//         return; // Stop further execution
-//       }
-//
 //       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
 //         email: email,
 //         password: password,
@@ -106,61 +81,6 @@
 //     }
 //   }
 //
-//   // Create a custom TextField with error handling
-//   Widget _buildTextField({
-//     required TextEditingController controller,
-//     required String labelText,
-//     required bool obscureText,
-//     String? errorText,
-//     Widget? suffixIcon,
-//   }) {
-//     bool hasError = errorText != null && errorText.isNotEmpty;
-//
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         TextField(
-//           controller: controller,
-//           obscureText: obscureText,
-//           decoration: InputDecoration(
-//             labelText: labelText,
-//             errorText: null, // Remove the default errorText here
-//             errorBorder: OutlineInputBorder(
-//               borderSide: BorderSide(color: Colors.red, width: 1),
-//             ),
-//             focusedErrorBorder: OutlineInputBorder(
-//               borderSide: BorderSide(color: Colors.red, width: 1),
-//             ),
-//             focusedBorder: OutlineInputBorder(
-//               borderSide: BorderSide(color: Colors.blue, width: 2),
-//             ),
-//             border: OutlineInputBorder(
-//               borderSide: BorderSide(
-//                 color: hasError ? Colors.red : Colors.black, // Apply red border only if error exists
-//                 width: 1,
-//               ),
-//             ),
-//             suffixIcon: hasError
-//                 ? Icon(
-//               Icons.error,
-//               color: Colors.red,
-//             )
-//                 : suffixIcon, // Show error icon if there's an error, otherwise show eye icon
-//           ),
-//         ),
-//         // Show error message only if there's an error
-//         if (errorText != null && errorText.isNotEmpty)
-//           Padding(
-//             padding: const EdgeInsets.only(top: 4.0),
-//             child: Text(
-//               errorText,
-//               style: TextStyle(color: Colors.red, fontSize: 12),
-//             ),
-//           ),
-//       ],
-//     );
-//   }
-//
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
@@ -169,7 +89,7 @@
 //         height: MediaQuery.of(context).size.height, // Full screen height
 //         decoration: BoxDecoration(
 //           image: DecorationImage(
-//             image: AssetImage('assets/unimas.png'), // Background image
+//             image: AssetImage('assets/unimaspic.jpeg'), // Background image
 //             fit: BoxFit.cover, // Cover the whole screen
 //           ),
 //         ),
@@ -188,17 +108,16 @@
 //                 mainAxisAlignment: MainAxisAlignment.center, // Center content vertically
 //                 children: [
 //                   // Logo at the top
-//                   Image.asset('assets/unimas_logo.png', height: 180, width: 180),
-//                   SizedBox(height: 5),
-//                   Align(
-//                     alignment: Alignment.centerLeft,  // Align it to the left
-//                     child: Text(
-//                       'Sign Up',
-//                       style: TextStyle(
-//                         fontSize: 22,
-//                         fontWeight: FontWeight.bold,
-//                         color: Colors.blue,
-//                       ),
+//                   Image.asset('assets/logo.png', height: 180, width: 180),
+//                   SizedBox(height: 20),
+//
+//                   // "Login" label above the container
+//                   Text(
+//                     'Login',
+//                     style: TextStyle(
+//                       fontSize: 24,
+//                       fontWeight: FontWeight.bold,
+//                       color: Colors.black,
 //                     ),
 //                   ),
 //                   SizedBox(height: 20),
@@ -277,6 +196,64 @@
 //           ),
 //         ),
 //       ),
+//     );
+//   }
+//
+//
+//   // Create a custom TextField with error handling
+//   Widget _buildTextField({
+//     required TextEditingController controller,
+//     required String labelText,
+//     required bool obscureText,
+//     String? errorText,
+//     Widget? suffixIcon,
+//   }) {
+//     bool hasError = errorText != null && errorText.isNotEmpty;
+//
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         TextField(
+//           controller: controller,
+//           obscureText: obscureText,
+//           decoration: InputDecoration(
+//             labelText: labelText,
+//             errorText: null,
+//             // Remove the default errorText here
+//             errorBorder: OutlineInputBorder(
+//               borderSide: BorderSide(color: Colors.red, width: 1),
+//             ),
+//             focusedErrorBorder: OutlineInputBorder(
+//               borderSide: BorderSide(color: Colors.red, width: 1),
+//             ),
+//             focusedBorder: OutlineInputBorder(
+//               borderSide: BorderSide(color: Colors.blue, width: 2),
+//             ),
+//             border: OutlineInputBorder(
+//               borderSide: BorderSide(
+//                 color: hasError ? Colors.red : Colors.black,
+//                 // Apply red border only if error exists
+//                 width: 1,
+//               ),
+//             ),
+//             suffixIcon: hasError
+//                 ? Icon(
+//               Icons.error,
+//               color: Colors.red,
+//             )
+//                 : suffixIcon, // Show error icon if there's an error
+//           ),
+//         ),
+//         // Show error message only if there's an error
+//         if (hasError)
+//           Padding(
+//             padding: const EdgeInsets.only(top: 4.0),
+//             child: Text(
+//               errorText!,
+//               style: TextStyle(color: Colors.red, fontSize: 12),
+//             ),
+//           ),
+//       ],
 //     );
 //   }
 // }

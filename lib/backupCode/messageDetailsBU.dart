@@ -1,7 +1,15 @@
+// import 'dart:convert';
+// import 'dart:io';
+// import 'package:flutter/cupertino.dart';
 // import 'package:flutter/material.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:http/http.dart' as http;
+// import 'package:image_picker/image_picker.dart';
 // import 'package:intl/intl.dart';
+// import 'package:redofyp/page/previewImage.dart';
+//
+// import 'deleteMessage.dart';
 //
 // class MessageDetailsPage extends StatefulWidget {
 //   final String conversationId;
@@ -24,17 +32,61 @@
 // class _MessageDetailsPageState extends State<MessageDetailsPage> {
 //   late String _userId;
 //   final TextEditingController _messageController = TextEditingController();
+//   File? _selectedImage;
+//   bool _isUploading = false;
+//   ScrollController _scrollController = ScrollController();
+//   List<DocumentSnapshot> _messages = [];
+//   String? _selectedMessageId;
 //
 //   @override
 //   void initState() {
 //     super.initState();
-//     _userId = FirebaseAuth.instance.currentUser!
-//         .uid; // Get the current logged-in user ID
+//     _userId = FirebaseAuth.instance.currentUser!.uid; // Get the current logged-in user ID
+//     _messageController.text = widget.messageContent;
+//     _fetchMessages();
+//   }
+//
+//   @override
+//   void dispose() {
+//     _scrollController.dispose();
+//     super.dispose();
+//   }
+//
+//   // This will ensure we scroll to the bottom after fetching messages
+//   void _scrollToBottom() {
+//     if (_scrollController.hasClients) {
+//       _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+//     }
+//   }
+//
+//   // Pick image function remains same
+//   Future<void> _pickImage() async {
+//     final picker = ImagePicker();
+//     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+//
+//     if (pickedFile != null) {
+//       setState(() {
+//         _selectedImage = File(pickedFile.path);
+//       });
+//
+//       // Navigate to the preview screen
+//       await Navigator.push(
+//         context,
+//         MaterialPageRoute(
+//           builder: (context) => PreviewImageScreen(
+//             imageFile: _selectedImage!,
+//             conversationId: widget.conversationId,
+//             senderId: widget.senderId,
+//             receiverId: widget.receiverId,
+//           ),
+//         ),
+//       );
+//     }
 //   }
 //
 // // Send a text message
-//   Future<void> _sendTextMessage() async {
-//     if (_messageController.text.isEmpty) return;
+//   Future<void> _sendTextMessage({String? imageUrl}) async {
+//     if (_messageController.text.isEmpty && imageUrl == null) return;
 //
 //     String senderId = widget.senderId;
 //     String receiverId = widget.receiverId;
@@ -79,6 +131,7 @@
 //         'isDeleted': false,
 //         'orderId': null, // Add orderId only in the first message
 //         'qrCodeImageUrl': qrCodeUrl,
+//         'imageUrl': imageUrl,
 //       });
 //
 //       // Update the last message in the parent 'messages' collection
@@ -91,6 +144,17 @@
 //       }, SetOptions(merge: true));
 //
 //       _messageController.clear();
+//
+//       // Trigger scroll to the latest message
+//       _scrollController.animateTo(
+//         _scrollController.position.maxScrollExtent,
+//         duration: Duration(milliseconds: 300),
+//         curve: Curves.easeOut,
+//       );
+//
+//       setState(() {
+//         _selectedImage = null;  // Reset the selected image
+//       });
 //     }
 //   }
 //
@@ -183,10 +247,12 @@
 //     });
 //
 //     return allDocs;
+//
 //   }
 //
 //   Widget _buildMessageList(List<DocumentSnapshot> docs) {
 //     return ListView.builder(
+//       controller: _scrollController,
 //       itemCount: docs.length,
 //       itemBuilder: (context, index) {
 //         final messageData = docs[index].data() as Map<String, dynamic>;
@@ -195,57 +261,69 @@
 //         final isSentByCurrentUser = messageData['senderId'] == _userId;
 //         final orderId = messageData['orderId'];  // Fetch the orderId from the chat message
 //         final qrCodeImageUrl = messageData['qrCodeImageUrl'] ?? ''; // Get the QR code image URL from the message data
+//         final imageUrl = messageData['imageUrl'] ?? '';
+//         final messageId = docs[index].id; // Get the message ID
 //
-//         return Padding(
-//           padding: const EdgeInsets.symmetric(vertical: 6),
-//           child: Align(
-//             alignment: isSentByCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
-//             child: Container(
-//               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-//               decoration: BoxDecoration(
-//                 color: isSentByCurrentUser ? Colors.greenAccent[100] : Colors.blue[100], // Sent: green, Received: blue
-//                 borderRadius: BorderRadius.only(
-//                   topLeft: Radius.circular(20),
-//                   topRight: Radius.circular(20),
-//                   bottomLeft: isSentByCurrentUser ? Radius.circular(20) : Radius.zero,
-//                   bottomRight: isSentByCurrentUser ? Radius.zero : Radius.circular(20),
-//                 ), // Rounded corners with different bottom for sender and receiver
-//               ),
-//               // Add margin for sent and received messages
-//               margin: isSentByCurrentUser
-//                   ? const EdgeInsets.only(left: 40.0, right: 8.0)  // Sent messages with margin from left
-//                   : const EdgeInsets.only(left: 8.0, right: 40.0), // Received messages with margin from right
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Text(
-//                     isSentByCurrentUser ? 'You' : widget.senderId,
-//                     style: const TextStyle(fontWeight: FontWeight.bold),
-//                   ),
-//                   const SizedBox(height: 5),
-//                   Text(
-//                     message,
-//                     style: const TextStyle(fontSize: 16),
-//                   ),
-//                   const SizedBox(height: 5),
-//                   if (qrCodeImageUrl.isNotEmpty)  // If QR Code image URL exists, show it
-//                     Column(
-//                       children: [
-//                         Image.network(qrCodeImageUrl, width: 150, height: 150),  // Show QR code image
-//                         Text("Proceed with payment and send the receipt once you have made the payment.")
-//                       ],
-//                     ),
-//                   const SizedBox(height: 5),
-//                   if (orderId != null)  // Display orderId if it exists
+//         return GestureDetector(
+//           onLongPress: () {
+//             setState(() {
+//               _selectedMessageId = messageId; // Select the message on long press
+//             });
+//             // Show the delete confirmation dialog
+//             deleteMessage(context, widget.conversationId, messageId);
+//           },
+//           child: Padding(
+//             padding: const EdgeInsets.symmetric(vertical: 6),
+//             child: Align(
+//               alignment: isSentByCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
+//               child: Container(
+//                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+//                 decoration: BoxDecoration(
+//                   color: isSentByCurrentUser ? Colors.greenAccent[100] : Colors.blue[100], // Sent: green, Received: blue
+//                   borderRadius: BorderRadius.only(
+//                     topLeft: Radius.circular(20),
+//                     topRight: Radius.circular(20),
+//                     bottomLeft: isSentByCurrentUser ? Radius.circular(20) : Radius.zero,
+//                     bottomRight: isSentByCurrentUser ? Radius.zero : Radius.circular(20),
+//                   ), // Rounded corners with different bottom for sender and receiver
+//                 ),
+//                 // Add margin for sent and received messages
+//                 margin: isSentByCurrentUser
+//                     ? const EdgeInsets.only(left: 40.0, right: 8.0)  // Sent messages with margin from left
+//                     : const EdgeInsets.only(left: 8.0, right: 40.0), // Received messages with margin from right
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     if (imageUrl.isNotEmpty)  // If image URL exists, show it
+//                       Column(
+//                         children: [
+//                           Image.network(imageUrl, width: 150, height: 150),  // Show image
+//                         ],
+//                       ),
 //                     Text(
-//                       'Order ID: $orderId',
+//                       message,
+//                       style: const TextStyle(fontSize: 16),
+//                     ),
+//                     const SizedBox(height: 5),
+//                     if (qrCodeImageUrl.isNotEmpty)  // If QR Code image URL exists, show it
+//                       Column(
+//                         children: [
+//                           Image.network(qrCodeImageUrl, width: 150, height: 150),  // Show QR code image
+//                           Text("Proceed with payment and send the receipt once you have made the payment.")
+//                         ],
+//                       ),
+//                     const SizedBox(height: 5),
+//                     if (orderId != null)  // Display orderId if it exists
+//                       Text(
+//                         'Order ID: $orderId',
+//                         style: const TextStyle(fontSize: 12, color: Colors.grey),
+//                       ),
+//                     Text(
+//                       DateFormat('HH:mm').format(timestamp),
 //                       style: const TextStyle(fontSize: 12, color: Colors.grey),
 //                     ),
-//                   Text(
-//                     DateFormat('HH:mm').format(timestamp),
-//                     style: const TextStyle(fontSize: 12, color: Colors.grey),
-//                   ),
-//                 ],
+//                   ],
+//                 ),
 //               ),
 //             ),
 //           ),
@@ -257,40 +335,49 @@
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
-//       appBar: AppBar(
-//         title: FutureBuilder<String>(
-//           future: _getOtherUserFullName(widget.conversationId),
-//           builder: (context, snapshot) {
-//             if (snapshot.connectionState == ConnectionState.waiting) {
-//               return const Text('Loading...');
-//             }
+//       appBar: PreferredSize(
+//         preferredSize: Size.fromHeight(70), // Set the height of the AppBar
+//         child: ClipRRect(
+//           borderRadius: BorderRadius.only(
+//             bottomLeft: Radius.circular(10),  // Set left bottom corner radius
+//             bottomRight: Radius.circular(10),  // Set right bottom corner radius
+//           ),
+//           child: AppBar(
+//             toolbarHeight: 80, // Toolbar height remains as per your request
+//             backgroundColor: CupertinoColors.systemYellow,  // AppBar background color
+//             title: FutureBuilder<String>(
+//               future: _getOtherUserFullName(widget.conversationId),
+//               builder: (context, snapshot) {
+//                 if (snapshot.connectionState == ConnectionState.waiting) {
+//                   return const Text('Loading...');
+//                 }
 //
-//             String senderName = snapshot.data ?? 'Unknown Sender';
+//                 String senderName = snapshot.data ?? 'Unknown Sender';
 //
-//             return Row(
-//               children: [
-//                 FutureBuilder<String>(
-//                   future: _getOtherUserProfilePhoto(widget.conversationId),
-//                   builder: (context, profileSnapshot) {
-//                     if (profileSnapshot.connectionState == ConnectionState.waiting) {
-//                       return const CircleAvatar(radius: 20);
-//                     }
+//                 return Row(
+//                   children: [
+//                     FutureBuilder<String>(
+//                       future: _getOtherUserProfilePhoto(widget.conversationId),
+//                       builder: (context, profileSnapshot) {
+//                         if (profileSnapshot.connectionState == ConnectionState.waiting) {
+//                           return const CircleAvatar(radius: 20);
+//                         }
 //
-//                     String senderProfileImage = profileSnapshot.data ?? 'https://via.placeholder.com/150';
+//                         String senderProfileImage = profileSnapshot.data ?? 'https://via.placeholder.com/150';
 //
-//                     return CircleAvatar(
-//                       radius: 20,
-//                       backgroundImage: NetworkImage(senderProfileImage),
-//                     );
-//                   },
-//                 ),
-//                 const SizedBox(width: 12),
-//                 Text(senderName),
-//               ],
-//             );
-//           },
-//         ),
-//       ),
+//                         return CircleAvatar(
+//                           radius: 20,
+//                           backgroundImage: NetworkImage(senderProfileImage),
+//                         );
+//                       },
+//                     ),
+//                     const SizedBox(width: 12),
+//                     Text(senderName),
+//                   ],
+//                 );
+//               },
+//             ),
+//           ),),),
 //       body: Padding(
 //         padding: const EdgeInsets.all(16.0),
 //         child: Column(
@@ -311,9 +398,9 @@
 //                 },
 //               ),
 //             ),
+//             const SizedBox(height: 16),
 //
 //             // Message input area
-//             const SizedBox(height: 16),
 //             Row(
 //               children: [
 //                 Expanded(
@@ -322,34 +409,40 @@
 //                     decoration: InputDecoration(
 //                       hintText: "  Type a message...",
 //                       border: OutlineInputBorder(
-//                         borderRadius: BorderRadius.circular(30.0), // Makes the corners more rounded
+//                         borderRadius: BorderRadius.circular(30.0),
 //                       ),
 //                       focusedBorder: OutlineInputBorder(
-//                         borderRadius: BorderRadius.circular(30.0), // Keep rounded corners when focused
+//                         borderRadius: BorderRadius.circular(30.0),
 //                         borderSide: BorderSide(color: Colors.blue),
 //                       ),
 //                       enabledBorder: OutlineInputBorder(
-//                         borderRadius: BorderRadius.circular(30.0), // Keep rounded corners when not focused
+//                         borderRadius: BorderRadius.circular(30.0),
 //                         borderSide: BorderSide(color: Colors.grey),
 //                       ),
-//                       // Add the pin icon as a prefix
 //                       suffixIcon: IconButton(
 //                         icon: Icon(Icons.attach_file),
 //                         onPressed: () {
+//                           _pickImage();
 //                           // Handle the pin icon click
-//                           print("Pin icon clicked!");
-//                           // Add your custom action here, like opening a new screen or showing a dialog
+//                           print("Attach file icon clicked!");
 //                         },
 //                       ),
 //                     ),
 //                   ),
 //                 ),
-//                 IconButton(
-//                   icon: const Icon(Icons.send),
-//                   onPressed: _sendTextMessage,
+//                 SizedBox(width: 10),
+//                 Container(
+//                   decoration: BoxDecoration(
+//                     color: Colors.greenAccent, // Background color
+//                     shape: BoxShape.circle, // Make the container round
+//                   ),
+//                   child: IconButton(
+//                     icon: const Icon(Icons.send),
+//                     onPressed: _sendTextMessage,
+//                   ),
 //                 ),
 //               ],
-//             )
+//             ),
 //           ],
 //         ),
 //       ),
